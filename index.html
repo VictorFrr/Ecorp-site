@@ -1,1811 +1,954 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ECORP — Elite Cyber Operations & Research Platform. Un toolkit Python open-source de plus de 25 outils de cybersécurité à usage éducatif. Pentest, réseau, OSINT, mots de passe et plus." />
-  <meta name="keywords" content="cybersécurité, éducatif, python, pentest, réseau, OSINT, open-source, lycée, toolkit" />
-  <meta property="og:title" content="ECORP — Outil de Cybersécurité Éducatif" />
-  <meta property="og:description" content="Elite Cyber Operations & Research Platform — 25+ outils de cybersécurité pour apprendre" />
-  <meta property="og:type" content="website" />
-  <title>ECORP — Elite Cyber Operations & Research Platform</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="ECORP — Elite Cyber Operations & Research Platform. Toolkit Python open-source de 25+ outils de cybersécurité éducatifs."/>
+<meta property="og:title" content="ECORP — Outil de Cybersécurité Éducatif"/>
+<meta property="og:type" content="website"/>
+<title>ECORP — Elite Cyber Operations & Research Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 
-  <!-- Preload critical fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+/* ── TOKENS ─────────────────────────────────────────────── */
+:root{
+  --bg:#080C10; --bg1:#0D1117; --bg2:#111820;
+  --surf:rgba(255,255,255,.04); --brd:rgba(255,255,255,.08);
+  --brd-hi:rgba(0,220,130,.25);
+  --acc:#00DC82; --acc-dim:rgba(0,220,130,.14); --acc-glow:rgba(0,220,130,.32);
+  --tx:#E8EDF2; --tx2:#8A9BAC; --tx3:#4A5968;
+  --mono:'Space Mono',monospace; --sans:'Space Grotesk',system-ui,sans-serif;
+  --r:12px; --rL:20px;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --cw:min(1160px,100% - 48px);
+}
 
-  <style>
-    /* ============================================================
-       DESIGN TOKENS
-       ============================================================ */
-    :root {
-      --bg:          #080C10;
-      --bg-1:        #0D1117;
-      --bg-2:        #111820;
-      --surface:     rgba(255,255,255,.04);
-      --border:      rgba(255,255,255,.08);
-      --border-hi:   rgba(0,220,130,.25);
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);overflow-x:hidden;line-height:1.6}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+ul{list-style:none}
+img,svg{display:block;max-width:100%}
 
-      --accent:      #00DC82;
-      --accent-dim:  rgba(0,220,130,.15);
-      --accent-glow: rgba(0,220,130,.35);
+/* ── SCROLL PROGRESS ─────────────────────────────────────── */
+#spb{position:fixed;top:0;left:0;height:2px;width:100%;background:var(--acc);transform:scaleX(0);transform-origin:left;z-index:500;transition:transform .08s linear}
 
-      --text:        #E8EDF2;
-      --text-2:      #8A9BAC;
-      --text-3:      #4A5968;
+/* ── NAV ─────────────────────────────────────────────────── */
+nav{position:fixed;inset:0 0 auto;z-index:200;padding:1.125rem 0;transition:background .35s,border-color .35s}
+nav.sc{background:rgba(8,12,16,.88);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--brd)}
+.ni{width:var(--cw);margin:auto;display:flex;align-items:center;gap:2rem}
+.logo{font-family:var(--mono);font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
+.logo span{color:var(--acc)}
+.nl{display:flex;gap:1.75rem;margin-left:auto;align-items:center}
+.nl a{font-size:.875rem;color:var(--tx2);transition:color .2s}
+.nl a:hover{color:var(--tx)}
+.ncta{padding:.5rem 1.25rem;background:var(--acc);color:var(--bg);border-radius:var(--r);font-size:.875rem;font-weight:600;transition:opacity .2s,transform .2s}
+.ncta:hover{opacity:.85;transform:translateY(-1px)}
+.hbg{display:none;flex-direction:column;gap:5px;margin-left:auto;padding:.5rem}
+.hbg span{display:block;width:22px;height:2px;background:var(--tx);border-radius:2px;transition:.3s}
+@media(max-width:780px){
+  .nl{display:none}
+  .nl.open{display:flex;flex-direction:column;position:fixed;inset:60px 0 0;background:var(--bg1);padding:2rem;gap:1.5rem;align-items:flex-start;border-top:1px solid var(--brd);z-index:199}
+  .hbg{display:flex}
+}
 
-      --mono:        'Space Mono', monospace;
-      --sans:        'Space Grotesk', system-ui, sans-serif;
+/* ── HERO ────────────────────────────────────────────────── */
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;overflow:hidden}
+#c3d{position:absolute;inset:0;z-index:0}
+.hero-content{position:relative;z-index:1;width:var(--cw);margin:auto;padding-block:120px 80px}
 
-      --radius:      12px;
-      --radius-lg:   20px;
-      --ease:        cubic-bezier(.16,1,.3,1);
+.badge{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .875rem;background:var(--acc-dim);border:1px solid var(--brd-hi);border-radius:999px;font-family:var(--mono);font-size:.7rem;color:var(--acc);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2rem}
+.bdot{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
 
-      --section-gap: clamp(80px, 12vw, 160px);
-      --container:   min(1200px, 100% - 48px);
-    }
+h1{font-size:clamp(3rem,6.5vw,5.5rem);font-weight:700;line-height:1.02;letter-spacing:-.04em;max-width:14ch;margin-bottom:1.5rem}
+h1 .acc{color:var(--acc)}
+h1 .dim{color:var(--tx3)}
 
-    /* ============================================================
-       RESET + BASE
-       ============================================================ */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.hdesc{font-size:clamp(1rem,1.4vw,1.175rem);color:var(--tx2);max-width:52ch;line-height:1.75;margin-bottom:2.5rem}
 
-    html {
-      scroll-behavior: smooth;
-      -webkit-text-size-adjust: 100%;
-    }
+.btns{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:4rem}
+.bp{display:inline-flex;align-items:center;gap:.5rem;padding:.875rem 1.75rem;background:var(--acc);color:var(--bg);border-radius:var(--r);font-weight:600;font-size:.975rem;transition:transform .2s var(--ease),box-shadow .2s}
+.bp:hover{transform:translateY(-2px);box-shadow:0 8px 30px var(--acc-glow)}
+.bs{display:inline-flex;align-items:center;gap:.5rem;padding:.875rem 1.75rem;background:var(--surf);color:var(--tx);border-radius:var(--r);font-weight:500;font-size:.975rem;border:1px solid var(--brd);transition:border-color .2s,transform .2s,background .2s}
+.bs:hover{border-color:var(--brd-hi);background:rgba(255,255,255,.07);transform:translateY(-2px)}
 
-    body {
-      font-family: var(--sans);
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
+.stats{display:flex;gap:3rem;flex-wrap:wrap}
+.sv{font-family:var(--mono);font-size:1.625rem;font-weight:700;line-height:1;margin-bottom:.25rem}
+.sl{font-size:.75rem;color:var(--tx3);letter-spacing:.05em;text-transform:uppercase}
 
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-      html { scroll-behavior: auto; }
-    }
+/* ── SCROLL EXPERIENCE wrapper ───────────────────────────── */
+/* A tall pinned section — the 3D canvas stays fixed while content slides */
+#scroll-exp{position:relative;height:400vh} /* 4 screens tall */
+#scroll-canvas-wrap{
+  position:sticky;top:0;height:100svh;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+#sc3d{position:absolute;inset:0;z-index:0}
 
-    img, svg { display: block; max-width: 100%; }
-    a { color: inherit; text-decoration: none; }
-    button { font-family: inherit; cursor: pointer; border: none; background: none; }
-    ul { list-style: none; }
+/* info panels that appear/move driven by scroll progress */
+.sp-panel{
+  position:absolute;z-index:2;
+  opacity:0;pointer-events:none;
+  transition:opacity .4s,transform .4s var(--ease);
+  max-width:360px;
+}
+.sp-panel.vis{opacity:1;pointer-events:auto}
 
-    /* ============================================================
-       LAYOUT HELPERS
-       ============================================================ */
-    .container { width: var(--container); margin-inline: auto; }
+/* LEFT panel (steps 1 & 3) */
+.sp-left{left:clamp(24px,7vw,100px)}
+/* RIGHT panel (step 2) */
+.sp-right{right:clamp(24px,7vw,100px);text-align:right}
 
-    .section { padding-block: var(--section-gap); }
-    .section-label {
-      font-family: var(--mono);
-      font-size: .75rem;
-      letter-spacing: .12em;
-      color: var(--accent);
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-      margin-bottom: 1.5rem;
-    }
-    .section-label::after {
-      content: '';
-      flex: 1;
-      max-width: 40px;
-      height: 1px;
-      background: var(--accent);
-      opacity: .5;
-    }
+.sp-num{font-family:var(--mono);font-size:.65rem;color:var(--acc);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.875rem;display:flex;align-items:center;gap:.625rem}
+.sp-right .sp-num{justify-content:flex-end}
+.sp-num::after{content:'';flex:1;max-width:32px;height:1px;background:var(--acc);opacity:.5}
+.sp-right .sp-num::before{content:'';flex:1;max-width:32px;height:1px;background:var(--acc);opacity:.5}
+.sp-right .sp-num::after{display:none}
 
-    .section-title {
-      font-size: clamp(2rem, 4vw, 3.25rem);
-      font-weight: 700;
-      line-height: 1.1;
-      letter-spacing: -.025em;
-      margin-bottom: 1.5rem;
-    }
-    .section-title em {
-      font-style: normal;
-      color: var(--accent);
-    }
-    .section-subtitle {
-      font-size: 1.125rem;
-      color: var(--text-2);
-      max-width: 56ch;
-      line-height: 1.7;
-    }
+.sp-title{font-size:clamp(1.4rem,2.5vw,2rem);font-weight:700;letter-spacing:-.03em;margin-bottom:.875rem;line-height:1.15}
+.sp-title em{font-style:normal;color:var(--acc)}
+.sp-desc{font-size:.9375rem;color:var(--tx2);line-height:1.7;margin-bottom:1.25rem}
+.sp-tags{display:flex;gap:.5rem;flex-wrap:wrap}
+.sp-right .sp-tags{justify-content:flex-end}
+.stag{font-family:var(--mono);font-size:.625rem;padding:.225rem .6rem;background:var(--surf);border:1px solid var(--brd);border-radius:4px;color:var(--tx3);letter-spacing:.04em}
 
-    /* ============================================================
-       SCROLL REVEAL
-       ============================================================ */
-    .reveal {
-      opacity: 0;
-      transform: translateY(28px);
-      transition: opacity .7s var(--ease), transform .7s var(--ease);
-    }
-    .reveal.visible {
-      opacity: 1;
-      transform: none;
-    }
-    .reveal-delay-1 { transition-delay: .1s; }
-    .reveal-delay-2 { transition-delay: .2s; }
-    .reveal-delay-3 { transition-delay: .3s; }
-    .reveal-delay-4 { transition-delay: .4s; }
+/* step indicator dots */
+#step-dots{
+  position:absolute;bottom:3rem;left:50%;transform:translateX(-50%);
+  display:flex;gap:.5rem;z-index:10;
+}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--tx3);transition:background .3s,transform .3s}
+.sdot.act{background:var(--acc);transform:scale(1.5)}
 
-    /* ============================================================
-       NOISE OVERLAY
-       ============================================================ */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-      opacity: .025;
-      pointer-events: none;
-      z-index: 9999;
-    }
+/* mobile: stack panels vertically if < 700px */
+@media(max-width:700px){
+  .sp-panel{max-width:90vw;right:auto!important;text-align:left!important;left:5vw!important}
+  .sp-right .sp-num{justify-content:flex-start}
+  .sp-right .sp-num::before{display:none}
+  .sp-right .sp-num::after{display:block}
+  .sp-right .sp-tags{justify-content:flex-start}
+}
 
-    /* ============================================================
-       CANVAS BACKGROUND
-       ============================================================ */
-    #bg-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-    }
+/* ── SECTIONS (rest of page) ─────────────────────────────── */
+.section{padding-block:clamp(80px,11vw,150px);position:relative;z-index:1}
+.cw{width:var(--cw);margin:auto}
 
-    /* ============================================================
-       NAVIGATION
-       ============================================================ */
-    .nav {
-      position: fixed;
-      top: 0;
-      inset-inline: 0;
-      z-index: 100;
-      padding: 1.25rem 0;
-      transition: background .4s, backdrop-filter .4s, border-color .4s;
-    }
-    .nav.scrolled {
-      background: rgba(8,12,16,.85);
-      backdrop-filter: blur(20px) saturate(180%);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-inner {
-      width: var(--container);
-      margin-inline: auto;
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-    }
-    .nav-logo {
-      font-family: var(--mono);
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -.01em;
-    }
-    .nav-logo span { color: var(--accent); }
+.slabel{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;color:var(--acc);text-transform:uppercase;display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem}
+.slabel::after{content:'';flex:1;max-width:36px;height:1px;background:var(--acc);opacity:.5}
 
-    .nav-links {
-      display: flex;
-      gap: 2rem;
-      margin-left: auto;
-      align-items: center;
-    }
-    .nav-links a {
-      font-size: .875rem;
-      color: var(--text-2);
-      transition: color .2s;
-    }
-    .nav-links a:hover { color: var(--text); }
+.stitle{font-size:clamp(1.875rem,3.5vw,3rem);font-weight:700;line-height:1.1;letter-spacing:-.03em;margin-bottom:1.5rem}
+.stitle em{font-style:normal;color:var(--acc)}
+.ssub{font-size:1.05rem;color:var(--tx2);max-width:54ch;line-height:1.72;margin-bottom:3rem}
 
-    .nav-cta {
-      padding: .5rem 1.25rem;
-      background: var(--accent);
-      color: var(--bg);
-      border-radius: var(--radius);
-      font-size: .875rem;
-      font-weight: 600;
-      transition: opacity .2s, transform .2s;
-    }
-    .nav-cta:hover { opacity: .88; transform: translateY(-1px); }
+/* reveal */
+.rv{opacity:0;transform:translateY(24px);transition:opacity .65s var(--ease),transform .65s var(--ease)}
+.rv.vis{opacity:1;transform:none}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}.d4{transition-delay:.4s}
 
-    .nav-toggle {
-      display: none;
-      flex-direction: column;
-      gap: 5px;
-      margin-left: auto;
-      padding: .5rem;
-    }
-    .nav-toggle span {
-      display: block;
-      width: 22px;
-      height: 2px;
-      background: var(--text);
-      transition: .3s;
-    }
+/* glowing divider */
+.gdiv{height:1px;background:linear-gradient(90deg,transparent,var(--acc-glow),transparent);opacity:.55}
 
-    @media (max-width: 768px) {
-      .nav-links { display: none; }
-      .nav-links.open {
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        inset: 64px 0 0;
-        background: var(--bg-1);
-        padding: 2rem;
-        gap: 1.5rem;
-        align-items: flex-start;
-        border-top: 1px solid var(--border);
-        z-index: 99;
-      }
-      .nav-toggle { display: flex; }
-    }
+/* ── DOWNLOAD ────────────────────────────────────────────── */
+.dlcard{background:var(--bg1);border:1px solid var(--brd);border-radius:var(--rL);padding:clamp(2rem,5vw,4rem);display:grid;grid-template-columns:1fr auto;gap:3rem;align-items:start;position:relative;overflow:hidden}
+.dlcard::after{content:'';position:absolute;top:-100px;right:-100px;width:380px;height:380px;border-radius:50%;background:var(--acc-glow);filter:blur(100px);pointer-events:none;opacity:.28}
+@media(max-width:680px){.dlcard{grid-template-columns:1fr}}
+.dlver{font-family:var(--mono);font-size:.7rem;color:var(--acc);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.875rem}
+.dlname{font-size:1.375rem;font-weight:700;margin-bottom:.375rem}
+.dlmeta{font-size:.875rem;color:var(--tx3);margin-bottom:2rem}
+.reqs-t{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:.75rem}
+.reqs li{display:flex;gap:.625rem;font-size:.875rem;color:var(--tx2);margin-bottom:.5rem}
+.reqs li::before{content:'→';font-family:var(--mono);color:var(--acc);flex-shrink:0}
+.dla{display:flex;flex-direction:column;gap:.875rem;min-width:200px}
+.warn{margin-top:.875rem;padding:.75rem 1rem;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-radius:var(--r);font-size:.8rem;color:#FBBf24;line-height:1.5}
 
-    /* ============================================================
-       HERO
-       ============================================================ */
-    .hero {
-      position: relative;
-      z-index: 1;
-      min-height: 100svh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding-block: 120px 80px;
-    }
+/* ── DOCS ────────────────────────────────────────────────── */
+.docs-layout{display:grid;grid-template-columns:210px 1fr;gap:3rem;align-items:start}
+@media(max-width:780px){.docs-layout{grid-template-columns:1fr}}
+.docs-nav{position:sticky;top:80px}
+.dni{display:flex;align-items:center;gap:.75rem;padding:.6rem .875rem;font-size:.875rem;color:var(--tx3);border-radius:var(--r);width:100%;text-align:left;font-family:var(--sans);transition:color .2s,background .2s;margin-bottom:.2rem}
+.dni:hover,.dni.act{color:var(--tx);background:var(--surf)}
+.dni.act{color:var(--acc)}
+.dnn{font-family:var(--mono);font-size:.65rem;color:var(--tx3);min-width:20px}
+.dp{display:none}.dp.act{display:block}
+.dpt{font-size:1.3rem;font-weight:700;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--brd)}
+.dtxt{font-size:.9375rem;color:var(--tx2);line-height:1.75;margin-bottom:1.5rem}
+.dtxt strong{color:var(--tx)}.dtxt a{color:var(--acc);text-decoration:underline;text-underline-offset:3px}
+.cb{background:var(--bg);border:1px solid var(--brd);border-radius:var(--r);padding:1.125rem 1.5rem;font-family:var(--mono);font-size:.8rem;line-height:1.75;color:var(--tx2);margin-block:1rem;overflow-x:auto}
+.cc{color:var(--tx3)}.cmd{color:var(--acc)}.cs{color:#7DD3FC}
+.mtbl{width:100%;border-collapse:collapse;font-size:.875rem;margin-block:1rem}
+.mtbl th{text-align:left;padding:.5rem .75rem;color:var(--tx3);font-weight:500;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--brd)}
+.mtbl td{padding:.625rem .75rem;color:var(--tx2);border-bottom:1px solid rgba(255,255,255,.04)}
+.mtbl td:first-child{font-family:var(--mono);color:var(--acc);font-size:.8rem}
+.dstep{margin-bottom:1.75rem}
+.dstt{font-size:1rem;font-weight:600;margin-bottom:.5rem}
 
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: .5rem;
-      padding: .375rem .875rem;
-      background: var(--accent-dim);
-      border: 1px solid var(--border-hi);
-      border-radius: 999px;
-      font-family: var(--mono);
-      font-size: .75rem;
-      color: var(--accent);
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      margin-bottom: 2rem;
-      width: fit-content;
-    }
-    .hero-badge-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: pulse 2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: .4; transform: scale(.8); }
-    }
+/* ── FAQ ─────────────────────────────────────────────────── */
+.faq-l{display:flex;flex-direction:column;gap:.75rem;max-width:760px}
+.fi{background:var(--bg1);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;transition:border-color .2s}
+.fi.open{border-color:var(--brd-hi)}
+.fq{width:100%;padding:1.2rem 1.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;font-size:.975rem;font-weight:500;text-align:left;color:var(--tx);background:none;font-family:var(--sans);cursor:pointer;transition:color .2s}
+.fq:hover{color:var(--acc)}
+.fi_ico{font-family:var(--mono);font-size:1.2rem;color:var(--tx3);flex-shrink:0;transition:transform .3s,color .3s}
+.fi.open .fi_ico{transform:rotate(45deg);color:var(--acc)}
+.fa{max-height:0;overflow:hidden;transition:max-height .4s var(--ease)}
+.fi.open .fa{max-height:400px}
+.fai{padding:0 1.5rem 1.2rem;font-size:.9375rem;color:var(--tx2);line-height:1.7}
+.fai strong{color:var(--tx)}
 
-    .hero-title {
-      font-size: clamp(3rem, 7vw, 6rem);
-      font-weight: 700;
-      line-height: 1.02;
-      letter-spacing: -.04em;
-      margin-bottom: 1.5rem;
-      max-width: 16ch;
-    }
-    .hero-title .accent { color: var(--accent); }
-    .hero-title .dim { color: var(--text-3); }
+/* ── LEGAL ───────────────────────────────────────────────── */
+.lgrid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:680px){.lgrid{grid-template-columns:1fr}}
+.lcard{background:var(--bg1);border:1px solid var(--brd);border-radius:var(--rL);padding:2rem}
+.lct{font-size:1rem;font-weight:600;margin-bottom:1rem}
+.ltxt{font-size:.875rem;color:var(--tx2);line-height:1.7}
+.ltxt+.ltxt{margin-top:.875rem}
+.ltxt a{color:var(--acc);text-decoration:underline;text-underline-offset:3px}
+.ltxt strong{color:var(--tx)}
+.ltxt ul{margin-top:.5rem;padding-left:1.25rem;list-style:disc}
+.ltxt ul li{margin-top:.3rem}
 
-    .hero-desc {
-      font-size: clamp(1rem, 1.5vw, 1.2rem);
-      color: var(--text-2);
-      max-width: 52ch;
-      line-height: 1.75;
-      margin-bottom: 2.5rem;
-    }
+/* RGPD table */
+.rtw{overflow-x:auto;margin-block:1.5rem;border:1px solid var(--brd);border-radius:var(--r)}
+.rt{width:100%;border-collapse:collapse;font-size:.8rem;white-space:nowrap}
+.rt th{padding:.75rem 1rem;background:var(--surf);color:var(--tx3);font-weight:500;text-align:left;font-size:.65rem;letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--brd)}
+.rt td{padding:.75rem 1rem;color:var(--tx2);border-bottom:1px solid rgba(255,255,255,.03)}
+.rt tr:last-child td{border:none}
+.no{color:#34D399;font-family:var(--mono);font-size:.65rem}
+.yo{color:#FBBf24;font-family:var(--mono);font-size:.65rem}
+.lo{color:#7DD3FC;font-family:var(--mono);font-size:.65rem}
 
-    .hero-actions {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-bottom: 4rem;
-    }
+/* ── FOOTER ──────────────────────────────────────────────── */
+footer{border-top:1px solid var(--brd);padding-block:3rem;position:relative;z-index:1}
+.fi2{display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap}
+.fl{font-family:var(--mono);font-size:.8rem;color:var(--tx3)}
+.fl span{color:var(--acc)}
+.fln{display:flex;gap:1.5rem}
+.fln a{font-size:.8rem;color:var(--tx3);transition:color .2s}
+.fln a:hover{color:var(--tx)}
+.fr{font-size:.8rem;color:var(--tx3)}
 
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: .5rem;
-      padding: .875rem 1.75rem;
-      background: var(--accent);
-      color: var(--bg);
-      border-radius: var(--radius);
-      font-weight: 600;
-      font-size: 1rem;
-      transition: transform .2s var(--ease), box-shadow .2s;
-    }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 32px var(--accent-glow);
-    }
-
-    .btn-secondary {
-      display: inline-flex;
-      align-items: center;
-      gap: .5rem;
-      padding: .875rem 1.75rem;
-      background: var(--surface);
-      color: var(--text);
-      border-radius: var(--radius);
-      font-weight: 500;
-      font-size: 1rem;
-      border: 1px solid var(--border);
-      transition: border-color .2s, background .2s, transform .2s;
-    }
-    .btn-secondary:hover {
-      border-color: var(--border-hi);
-      background: rgba(255,255,255,.07);
-      transform: translateY(-2px);
-    }
-
-    .hero-stats {
-      display: flex;
-      gap: 3rem;
-      flex-wrap: wrap;
-    }
-    .hero-stat-value {
-      font-family: var(--mono);
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1;
-      margin-bottom: .25rem;
-    }
-    .hero-stat-label {
-      font-size: .8125rem;
-      color: var(--text-3);
-      letter-spacing: .04em;
-      text-transform: uppercase;
-    }
-
-    /* Terminal widget */
-    .hero-terminal {
-      position: absolute;
-      right: clamp(20px, 5vw, 80px);
-      top: 50%;
-      transform: translateY(-50%);
-      width: min(480px, 45vw);
-      background: var(--bg-1);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      box-shadow: 0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04);
-    }
-    @media (max-width: 1000px) { .hero-terminal { display: none; } }
-
-    .terminal-bar {
-      padding: .875rem 1rem;
-      background: rgba(255,255,255,.03);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-    }
-    .terminal-dot {
-      width: 12px; height: 12px;
-      border-radius: 50%;
-    }
-    .terminal-dot-r { background: #FF5F57; }
-    .terminal-dot-y { background: #FEBC2E; }
-    .terminal-dot-g { background: #28C840; }
-    .terminal-title {
-      font-family: var(--mono);
-      font-size: .75rem;
-      color: var(--text-3);
-      margin-left: .5rem;
-    }
-
-    .terminal-body {
-      padding: 1.25rem 1.5rem;
-      font-family: var(--mono);
-      font-size: .8125rem;
-      line-height: 1.8;
-      color: var(--text-2);
-      min-height: 280px;
-    }
-    .terminal-line { display: flex; gap: .75rem; }
-    .terminal-prompt { color: var(--accent); flex-shrink: 0; }
-    .terminal-cmd { color: var(--text); }
-    .terminal-output { color: var(--text-2); padding-left: 1.5rem; }
-    .terminal-success { color: var(--accent); }
-    .terminal-section { color: #7DD3FC; }
-    .terminal-cursor {
-      display: inline-block;
-      width: 8px; height: 1em;
-      background: var(--accent);
-      animation: blink 1s step-end infinite;
-      vertical-align: text-bottom;
-      margin-left: 2px;
-    }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-    /* ============================================================
-       MODULES SECTION
-       ============================================================ */
-    .modules { position: relative; z-index: 1; }
-
-    .modules-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5px;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
-
-    .module-card {
-      background: var(--bg-1);
-      padding: 2rem;
-      position: relative;
-      transition: background .25s;
-      cursor: default;
-      overflow: hidden;
-    }
-    .module-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%), var(--accent-dim), transparent 70%);
-      opacity: 0;
-      transition: opacity .4s;
-    }
-    .module-card:hover::before { opacity: 1; }
-    .module-card:hover { background: var(--bg-2); }
-
-    .module-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius);
-      background: var(--accent-dim);
-      border: 1px solid var(--border-hi);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.375rem;
-      margin-bottom: 1.25rem;
-    }
-    .module-name {
-      font-size: 1.0625rem;
-      font-weight: 600;
-      margin-bottom: .5rem;
-    }
-    .module-desc {
-      font-size: .875rem;
-      color: var(--text-2);
-      line-height: 1.65;
-      margin-bottom: 1.25rem;
-    }
-    .module-tags {
-      display: flex;
-      gap: .5rem;
-      flex-wrap: wrap;
-    }
-    .tag {
-      font-family: var(--mono);
-      font-size: .6875rem;
-      padding: .2rem .6rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--text-3);
-      letter-spacing: .04em;
-    }
-
-    /* ============================================================
-       DOWNLOAD SECTION
-       ============================================================ */
-    .download { position: relative; z-index: 1; }
-    .download-card {
-      background: var(--bg-1);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: clamp(2rem, 5vw, 4rem);
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 3rem;
-      align-items: start;
-      position: relative;
-      overflow: hidden;
-    }
-    .download-card::after {
-      content: '';
-      position: absolute;
-      top: -120px;
-      right: -120px;
-      width: 400px;
-      height: 400px;
-      border-radius: 50%;
-      background: var(--accent-glow);
-      filter: blur(100px);
-      pointer-events: none;
-      opacity: .3;
-    }
-    @media (max-width: 700px) {
-      .download-card { grid-template-columns: 1fr; }
-    }
-
-    .download-version {
-      font-family: var(--mono);
-      font-size: .75rem;
-      color: var(--accent);
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      margin-bottom: 1rem;
-    }
-    .download-name {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: .5rem;
-    }
-    .download-meta {
-      font-size: .875rem;
-      color: var(--text-3);
-      margin-bottom: 2rem;
-    }
-
-    .reqs-title {
-      font-size: .8125rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--text-3);
-      margin-bottom: .875rem;
-    }
-    .reqs-list {
-      display: flex;
-      flex-direction: column;
-      gap: .5rem;
-    }
-    .req-item {
-      display: flex;
-      align-items: flex-start;
-      gap: .625rem;
-      font-size: .875rem;
-      color: var(--text-2);
-    }
-    .req-item::before {
-      content: '→';
-      font-family: var(--mono);
-      color: var(--accent);
-      flex-shrink: 0;
-      margin-top: .05em;
-    }
-
-    .download-actions {
-      display: flex;
-      flex-direction: column;
-      gap: .875rem;
-      min-width: 220px;
-    }
-    .download-warning {
-      margin-top: 1rem;
-      padding: .75rem 1rem;
-      background: rgba(251,191,36,.07);
-      border: 1px solid rgba(251,191,36,.2);
-      border-radius: var(--radius);
-      font-size: .8125rem;
-      color: #FBBf24;
-      line-height: 1.5;
-    }
-
-    /* ============================================================
-       DOCUMENTATION
-       ============================================================ */
-    .docs { position: relative; z-index: 1; }
-    .docs-layout {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 3rem;
-      align-items: start;
-    }
-    @media (max-width: 800px) {
-      .docs-layout { grid-template-columns: 1fr; }
-    }
-
-    .docs-nav {
-      position: sticky;
-      top: 88px;
-    }
-    .docs-nav-item {
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-      padding: .625rem .875rem;
-      font-size: .875rem;
-      color: var(--text-3);
-      border-radius: var(--radius);
-      cursor: pointer;
-      transition: color .2s, background .2s;
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
-      font-family: var(--sans);
-    }
-    .docs-nav-item:hover,
-    .docs-nav-item.active {
-      color: var(--text);
-      background: var(--surface);
-    }
-    .docs-nav-item.active { color: var(--accent); }
-    .docs-nav-num {
-      font-family: var(--mono);
-      font-size: .6875rem;
-      color: var(--text-3);
-      min-width: 20px;
-    }
-
-    .docs-panels > div {
-      display: none;
-    }
-    .docs-panels > div.active {
-      display: block;
-    }
-
-    .docs-panel-title {
-      font-size: 1.375rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .code-block {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.25rem 1.5rem;
-      font-family: var(--mono);
-      font-size: .8125rem;
-      line-height: 1.7;
-      color: var(--text-2);
-      margin-block: 1rem;
-      overflow-x: auto;
-    }
-    .code-comment { color: var(--text-3); }
-    .code-cmd { color: var(--accent); }
-    .code-string { color: #7DD3FC; }
-
-    .docs-text {
-      font-size: .9375rem;
-      color: var(--text-2);
-      line-height: 1.75;
-      margin-bottom: 1.5rem;
-    }
-    .docs-text strong { color: var(--text); }
-    .docs-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
-
-    .doc-step {
-      margin-bottom: 1.75rem;
-    }
-    .doc-step-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: .625rem;
-      color: var(--text);
-    }
-
-    /* menu numbering table */
-    .menu-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .875rem;
-      margin-block: 1rem;
-    }
-    .menu-table th {
-      text-align: left;
-      padding: .5rem .75rem;
-      color: var(--text-3);
-      font-weight: 500;
-      font-size: .75rem;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      border-bottom: 1px solid var(--border);
-    }
-    .menu-table td {
-      padding: .625rem .75rem;
-      color: var(--text-2);
-      border-bottom: 1px solid rgba(255,255,255,.04);
-    }
-    .menu-table td:first-child {
-      font-family: var(--mono);
-      color: var(--accent);
-      font-size: .8125rem;
-    }
-
-    /* ============================================================
-       FAQ
-       ============================================================ */
-    .faq { position: relative; z-index: 1; }
-    .faq-list { display: flex; flex-direction: column; gap: .75rem; max-width: 760px; }
-
-    .faq-item {
-      background: var(--bg-1);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      transition: border-color .2s;
-    }
-    .faq-item.open { border-color: var(--border-hi); }
-
-    .faq-question {
-      width: 100%;
-      padding: 1.25rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      font-size: 1rem;
-      font-weight: 500;
-      text-align: left;
-      color: var(--text);
-      background: none;
-      border: none;
-      font-family: var(--sans);
-      cursor: pointer;
-      transition: color .2s;
-    }
-    .faq-question:hover { color: var(--accent); }
-    .faq-icon {
-      font-family: var(--mono);
-      font-size: 1.25rem;
-      color: var(--text-3);
-      flex-shrink: 0;
-      transition: transform .3s, color .3s;
-    }
-    .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--accent); }
-
-    .faq-answer {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height .4s var(--ease);
-    }
-    .faq-item.open .faq-answer { max-height: 500px; }
-    .faq-answer-inner {
-      padding: 0 1.5rem 1.25rem;
-      font-size: .9375rem;
-      color: var(--text-2);
-      line-height: 1.7;
-    }
-    .faq-answer-inner strong { color: var(--text); }
-
-    /* ============================================================
-       LEGAL + RGPD
-       ============================================================ */
-    .legal { position: relative; z-index: 1; }
-    .legal-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-    }
-    @media (max-width: 700px) {
-      .legal-grid { grid-template-columns: 1fr; }
-    }
-    .legal-card {
-      background: var(--bg-1);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 2rem;
-    }
-    .legal-card-title {
-      font-size: 1.0625rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-      color: var(--text);
-    }
-    .legal-text {
-      font-size: .875rem;
-      color: var(--text-2);
-      line-height: 1.7;
-    }
-    .legal-text + .legal-text { margin-top: .875rem; }
-    .legal-text a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
-    .legal-text strong { color: var(--text); }
-    .legal-text ul { margin-top: .5rem; padding-left: 1.25rem; list-style: disc; }
-    .legal-text ul li { margin-top: .25rem; }
-
-    /* RGPD Table */
-    .rgpd-table-wrap {
-      overflow-x: auto;
-      margin-block: 1.5rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-    }
-    .rgpd-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .8125rem;
-      white-space: nowrap;
-    }
-    .rgpd-table th {
-      padding: .75rem 1rem;
-      background: var(--surface);
-      color: var(--text-3);
-      font-weight: 500;
-      text-align: left;
-      font-size: .6875rem;
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
-    }
-    .rgpd-table td {
-      padding: .75rem 1rem;
-      color: var(--text-2);
-      border-bottom: 1px solid rgba(255,255,255,.03);
-    }
-    .rgpd-table tr:last-child td { border: none; }
-    .badge-no { color: #34D399; font-family: var(--mono); font-size: .7rem; }
-    .badge-yes { color: #FBBf24; font-family: var(--mono); font-size: .7rem; }
-    .badge-local { color: #7DD3FC; font-family: var(--mono); font-size: .7rem; }
-
-    /* ============================================================
-       FOOTER
-       ============================================================ */
-    .footer {
-      position: relative;
-      z-index: 1;
-      border-top: 1px solid var(--border);
-      padding-block: 3rem;
-    }
-    .footer-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 2rem;
-      flex-wrap: wrap;
-    }
-    .footer-logo {
-      font-family: var(--mono);
-      font-size: .875rem;
-      color: var(--text-3);
-    }
-    .footer-logo span { color: var(--accent); }
-    .footer-links {
-      display: flex;
-      gap: 1.5rem;
-    }
-    .footer-links a {
-      font-size: .8125rem;
-      color: var(--text-3);
-      transition: color .2s;
-    }
-    .footer-links a:hover { color: var(--text); }
-    .footer-right {
-      font-size: .8125rem;
-      color: var(--text-3);
-    }
-
-    /* ============================================================
-       GLOW DIVIDER
-       ============================================================ */
-    .glow-divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
-      margin-block: 0;
-      opacity: .6;
-    }
-
-    /* ============================================================
-       SCROLL PROGRESS
-       ============================================================ */
-    .scroll-progress {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 2px;
-      background: var(--accent);
-      z-index: 200;
-      transform-origin: left;
-      transform: scaleX(0);
-      transition: transform .1s linear;
-    }
-  </style>
+/* noise */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");opacity:.022;pointer-events:none;z-index:9999}
+</style>
 </head>
 <body>
 
-<!-- Scroll progress -->
-<div class="scroll-progress" id="progress" aria-hidden="true"></div>
+<div id="spb" aria-hidden="true"></div>
 
-<!-- Animated background canvas -->
-<canvas id="bg-canvas" aria-hidden="true"></canvas>
-
-<!-- ============================================================
-     NAVIGATION
-     ============================================================ -->
-<nav class="nav" id="nav" role="navigation" aria-label="Navigation principale">
-  <div class="nav-inner">
-    <a href="#" class="nav-logo" aria-label="ECORP accueil">EC<span>O</span>RP</a>
-    <ul class="nav-links" id="nav-links" role="list">
-      <li><a href="#fonctionnalites">Modules</a></li>
+<!-- NAV -->
+<nav id="nav" role="navigation" aria-label="Navigation principale">
+  <div class="ni">
+    <a href="#" class="logo" aria-label="ECORP">EC<span>O</span>RP</a>
+    <ul class="nl" id="nl" role="list">
+      <li><a href="#modules">Modules</a></li>
       <li><a href="#telecharger">Télécharger</a></li>
       <li><a href="#documentation">Docs</a></li>
       <li><a href="#faq">FAQ</a></li>
-      <li><a href="#mentions-legales">Légal</a></li>
-      <li><a href="https://github.com/juto222/Projet-Lyc-e" class="nav-cta" target="_blank" rel="noopener">GitHub ↗</a></li>
+      <li><a href="#legales">Légal</a></li>
+      <li><a href="https://github.com/juto222/Projet-Lyc-e" class="ncta" target="_blank" rel="noopener">GitHub ↗</a></li>
     </ul>
-    <button class="nav-toggle" id="nav-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+    <button class="hbg" id="hbg" aria-label="Ouvrir menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
   </div>
 </nav>
 
-<!-- ============================================================
-     HERO
-     ============================================================ -->
+<!-- ── HERO ──────────────────────────────────────────────── -->
 <main>
-<section class="hero" aria-labelledby="hero-title">
-  <div class="container" style="position:relative;z-index:1">
-
-    <div class="hero-badge reveal">
-      <span class="hero-badge-dot" aria-hidden="true"></span>
-      Outil éducatif — Cybersécurité
-    </div>
-
-    <h1 class="hero-title reveal reveal-delay-1" id="hero-title">
-      Elite Cyber<br/><span class="accent">Operations</span><br/><span class="dim">&amp; Research</span>
-    </h1>
-
-    <p class="hero-desc reveal reveal-delay-2">
-      Un toolkit Python tout-en-un dédié à l'apprentissage de la cybersécurité
-      et des réseaux. Conçu dans le cadre d'un projet de lycée, il regroupe
-      plus de <strong>25 outils</strong> interactifs — pentest, réseau, OSINT, mots de passe et plus.
-    </p>
-
-    <div class="hero-actions reveal reveal-delay-3">
-      <a href="#telecharger" class="btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+<section class="hero" aria-labelledby="htitle">
+  <canvas id="c3d" aria-hidden="true"></canvas>
+  <div class="hero-content">
+    <div class="badge rv"><span class="bdot" aria-hidden="true"></span>Outil éducatif — Cybersécurité</div>
+    <h1 class="rv d1" id="htitle">Elite Cyber<br/><span class="acc">Operations</span><br/><span class="dim">&amp; Research</span></h1>
+    <p class="hdesc rv d2">Un toolkit Python tout-en-un dédié à l'apprentissage de la cybersécurité. Plus de <strong>25 outils</strong> interactifs — pentest, réseau, OSINT, mots de passe et bien plus.</p>
+    <div class="btns rv d3">
+      <a href="#telecharger" class="bp">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Télécharger
       </a>
-      <a href="#documentation" class="btn-secondary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <a href="#documentation" class="bs">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Documentation
       </a>
     </div>
-
-    <div class="hero-stats reveal reveal-delay-4">
-      <div>
-        <div class="hero-stat-value">25+</div>
-        <div class="hero-stat-label">Outils intégrés</div>
-      </div>
-      <div>
-        <div class="hero-stat-value">7</div>
-        <div class="hero-stat-label">Catégories</div>
-      </div>
-      <div>
-        <div class="hero-stat-value">FR/EN</div>
-        <div class="hero-stat-label">Bilingue</div>
-      </div>
-      <div>
-        <div class="hero-stat-value">GPL-2.0</div>
-        <div class="hero-stat-label">Open-source</div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Terminal (desktop only) -->
-  <div class="hero-terminal" aria-hidden="true" id="terminal-widget">
-    <div class="terminal-bar">
-      <span class="terminal-dot terminal-dot-r"></span>
-      <span class="terminal-dot terminal-dot-y"></span>
-      <span class="terminal-dot terminal-dot-g"></span>
-      <span class="terminal-title">root@ecorp — python main.py</span>
-    </div>
-    <div class="terminal-body" id="terminal-body">
-      <!-- Animated via JS -->
-    </div>
-  </div>
-
-</section>
-
-<!-- ============================================================
-     MODULES
-     ============================================================ -->
-<section class="section modules" id="fonctionnalites" aria-labelledby="modules-title">
-  <div class="container">
-    <div class="section-label reveal">modules</div>
-    <h2 class="section-title reveal reveal-delay-1" id="modules-title">Ce que <em>ECORP</em> sait faire</h2>
-    <p class="section-subtitle reveal reveal-delay-2" style="margin-bottom:3rem">
-      Chaque module est accessible depuis le menu interactif en terminal.
-      Naviguez par numéro, en français ou en anglais.
-    </p>
-
-    <div class="modules-grid" role="list">
-
-      <article class="module-card reveal" role="listitem">
-        <div class="module-icon" aria-hidden="true">🔐</div>
-        <h3 class="module-name">Mot de passe</h3>
-        <p class="module-desc">Générer des mots de passe sécurisés, vérifier leur robustesse, tester s'ils ont été compromis via Have I Been Pwned, et s'entraîner avec un quiz interactif.</p>
-        <div class="module-tags" aria-label="Outils disponibles">
-          <span class="tag">GenererMDP</span>
-          <span class="tag">CheckMDP</span>
-          <span class="tag">HIBP</span>
-          <span class="tag">Quiz</span>
-        </div>
-      </article>
-
-      <article class="module-card reveal reveal-delay-1" role="listitem">
-        <div class="module-icon" aria-hidden="true">🛡</div>
-        <h3 class="module-name">Pentest</h3>
-        <p class="module-desc">DirBuster pour la découverte de répertoires, générateur de page HTML (phishing éducatif), keylogger pédagogique, scanner de sous-domaines et quiz sécurité.</p>
-        <div class="module-tags" aria-label="Outils disponibles">
-          <span class="tag">DirBuster</span>
-          <span class="tag">Phishing</span>
-          <span class="tag">Keylogger</span>
-          <span class="tag">Subdomain</span>
-        </div>
-      </article>
-
-      <article class="module-card reveal reveal-delay-2" role="listitem">
-        <div class="module-icon" aria-hidden="true">📊</div>
-        <h3 class="module-name">Réseau</h3>
-        <p class="module-desc">Ping IP, scan de réseau avec Nmap, consultation des logs, géolocalisation d'une adresse IP, test de débit Internet et quiz réseau.</p>
-        <div class="module-tags" aria-label="Outils disponibles">
-          <span class="tag">Ping</span>
-          <span class="tag">Nmap</span>
-          <span class="tag">IP Lookup</span>
-          <span class="tag">Speedtest</span>
-        </div>
-      </article>
-
-      <article class="module-card reveal" role="listitem">
-        <div class="module-icon" aria-hidden="true">💻</div>
-        <h3 class="module-name">PC &amp; Système</h3>
-        <p class="module-desc">Affichage des informations système, gestionnaire de tâches, nettoyeur de fichiers temporaires et création de fichiers leurres pour des tests.</p>
-        <div class="module-tags" aria-label="Outils disponibles">
-          <span class="tag">SysInfo</span>
-          <span class="tag">TaskManager</span>
-          <span class="tag">Cleaner</span>
-          <span class="tag">Leurre</span>
-        </div>
-      </article>
-
-      <article class="module-card reveal reveal-delay-1" role="listitem">
-        <div class="module-icon" aria-hidden="true">🧩</div>
-        <h3 class="module-name">Autres outils</h3>
-        <p class="module-desc">Recherche d'utilisateur OSINT, gestionnaire de mots de passe, chiffrement/déchiffrement de fichiers Python et console interactive.</p>
-        <div class="module-tags" aria-label="Outils disponibles">
-          <span class="tag">OSINT</span>
-          <span class="tag">Crypt</span>
-          <span class="tag">Console</span>
-          <span class="tag">PwdManager</span>
-        </div>
-      </article>
-
-      <article class="module-card reveal reveal-delay-2" role="listitem">
-        <div class="module-icon" aria-hidden="true">⚙️</div>
-        <h3 class="module-name">Interface &amp; Paramètres</h3>
-        <p class="module-desc">Basculez entre mode sombre/clair, choisissez la langue, interface colorée avec Colorama et prompt personnalisé affichant user@machine.</p>
-        <div class="module-tags" aria-label="Outils disponibles">
-          <span class="tag">Colorama</span>
-          <span class="tag">FR/EN</span>
-          <span class="tag">Dark/Light</span>
-          <span class="tag">Flet</span>
-        </div>
-      </article>
-
+    <div class="stats rv d4">
+      <div><div class="sv">25+</div><div class="sl">Outils intégrés</div></div>
+      <div><div class="sv">7</div><div class="sl">Catégories</div></div>
+      <div><div class="sv">FR/EN</div><div class="sl">Bilingue</div></div>
+      <div><div class="sv">GPL-2.0</div><div class="sl">Open-source</div></div>
     </div>
   </div>
 </section>
 
-<div class="glow-divider"></div>
+<!-- ── SCROLL 3D EXPERIENCE ───────────────────────────────── -->
+<div id="scroll-exp" aria-label="Présentation interactive des modules" id="modules">
+  <div id="scroll-canvas-wrap">
+    <canvas id="sc3d" aria-hidden="true"></canvas>
 
-<!-- ============================================================
-     DOWNLOAD
-     ============================================================ -->
-<section class="section download" id="telecharger" aria-labelledby="download-title">
-  <div class="container">
-    <div class="section-label reveal">téléchargement</div>
-    <h2 class="section-title reveal reveal-delay-1" id="download-title">Installer <em>ECORP</em></h2>
-    <p class="section-subtitle reveal reveal-delay-2" style="margin-bottom:3rem">
-      ECORP est un projet open-source sous licence GPL-2.0. Téléchargez les sources et exécutez le script d'installation.
-    </p>
+    <!-- Step 0 — intro text centré -->
+    <div class="sp-panel" id="sp0" style="text-align:center;max-width:480px;left:50%;transform:translateX(-50%)">
+      <div class="sp-num" style="justify-content:center">// modules</div>
+      <div class="sp-title">Ce que <em>ECORP</em><br/>sait faire</div>
+      <p class="sp-desc">Chaque module est accessible depuis le menu interactif. Scrollez pour découvrir les 6 catégories d'outils.</p>
+    </div>
 
-    <div class="download-card reveal">
+    <!-- Step 1 — Mot de passe + Pentest (LEFT) -->
+    <div class="sp-panel sp-left" id="sp1">
+      <div class="sp-num">01 — Sécurité des mots de passe</div>
+      <div class="sp-title">Mots de <em>passe</em></div>
+      <p class="sp-desc">Générez des mots de passe robustes, vérifiez leur robustesse, testez s'ils ont été compromis via Have I Been Pwned avec k-anonymat SHA-1, et entraînez-vous avec un quiz interactif.</p>
+      <div class="sp-tags"><span class="stag">GenererMDP</span><span class="stag">CheckMDP</span><span class="stag">HIBP</span><span class="stag">Quiz [13]</span></div>
+    </div>
+
+    <!-- Step 2 — Pentest (RIGHT) -->
+    <div class="sp-panel sp-right" id="sp2">
+      <div class="sp-num">02 — Tests d'intrusion</div>
+      <div class="sp-title"><em>Pentest</em> &amp;<br/>analyse</div>
+      <p class="sp-desc">DirBuster pour la découverte de répertoires, générateur de page de phishing éducatif, keylogger pédagogique local, scanner de sous-domaines et quiz sécurité multi-niveaux.</p>
+      <div class="sp-tags"><span class="stag">DirBuster</span><span class="stag">Phishing</span><span class="stag">Keylogger</span><span class="stag">Subdomain</span></div>
+    </div>
+
+    <!-- Step 3 — Réseau (LEFT) -->
+    <div class="sp-panel sp-left" id="sp3">
+      <div class="sp-num">03 — Analyse réseau</div>
+      <div class="sp-title">Outils <em>Réseau</em></div>
+      <p class="sp-desc">Ping IP, scan de ports via Nmap, consultation des logs, géolocalisation d'une adresse IP avec informations FAI/ASN, test de débit Internet et quiz réseau.</p>
+      <div class="sp-tags"><span class="stag">Ping</span><span class="stag">Nmap</span><span class="stag">IP Lookup</span><span class="stag">Speedtest</span></div>
+    </div>
+
+    <!-- Step 4 — PC + OSINT (RIGHT) -->
+    <div class="sp-panel sp-right" id="sp4">
+      <div class="sp-num">04 — Système &amp; OSINT</div>
+      <div class="sp-title">PC, <em>OSINT</em><br/>&amp; plus</div>
+      <p class="sp-desc">Informations système complètes, gestionnaire de tâches, nettoyeur de fichiers temporaires, leurres de test, recherche OSINT de pseudonymes, chiffrement Python et console interactive.</p>
+      <div class="sp-tags"><span class="stag">SysInfo</span><span class="stag">OSINT</span><span class="stag">Crypt</span><span class="stag">Console</span></div>
+    </div>
+
+    <!-- Step dots -->
+    <div id="step-dots" aria-hidden="true">
+      <span class="sdot act"></span>
+      <span class="sdot"></span>
+      <span class="sdot"></span>
+      <span class="sdot"></span>
+      <span class="sdot"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ── DOWNLOAD ───────────────────────────────────────────── -->
+<div class="gdiv"></div>
+<section class="section" id="telecharger" aria-labelledby="dltitle">
+  <div class="cw">
+    <div class="slabel rv">téléchargement</div>
+    <h2 class="stitle rv d1" id="dltitle">Installer <em>ECORP</em></h2>
+    <p class="ssub rv d2">Projet open-source sous licence GPL-2.0. Téléchargez les sources et exécutez le script d'installation.</p>
+    <div class="dlcard rv">
       <div>
-        <div class="download-version">Version actuelle — 1.0.0 · 27 Mars 2026</div>
-        <div class="download-name">Projet-Lycée-main.zip</div>
-        <div class="download-meta">Sources Python complètes · ~300 Ko · Windows 10/11</div>
-
-        <div class="reqs-title">Prérequis</div>
-        <ul class="reqs-list">
-          <li class="req-item">Python 3.11 (version exacte requise)</li>
-          <li class="req-item">Windows 10 ou 11 (64 bits)</li>
-          <li class="req-item">Nmap installé sur le système (pour le scanner réseau)</li>
-          <li class="req-item">Connexion Internet (pour les requêtes IP, HIBP, speedtest)</li>
-          <li class="req-item">Droits administrateur recommandés pour certains modules</li>
+        <div class="dlver">Version actuelle — 1.0.0 · 27 Mars 2026</div>
+        <div class="dlname">Projet-Lycée-main.zip</div>
+        <div class="dlmeta">Sources Python complètes · ~300 Ko · Windows 10/11</div>
+        <div class="reqs-t">Prérequis</div>
+        <ul class="reqs">
+          <li>Python 3.11 (version exacte requise)</li>
+          <li>Windows 10 ou 11 (64 bits)</li>
+          <li>Nmap installé sur le système</li>
+          <li>Connexion Internet (HIBP, géolocalisation, speedtest)</li>
+          <li>Droits administrateur recommandés</li>
         </ul>
       </div>
-
-      <div class="download-actions">
-        <a href="https://github.com/juto222/Projet-Lyc-e/archive/refs/heads/main.zip" class="btn-primary" style="justify-content:center">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <div class="dla">
+        <a href="https://github.com/juto222/Projet-Lyc-e/archive/refs/heads/main.zip" class="bp" style="justify-content:center">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Télécharger le ZIP
         </a>
-        <a href="https://github.com/juto222/Projet-Lyc-e" class="btn-secondary" style="justify-content:center" target="_blank" rel="noopener">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        <a href="https://github.com/juto222/Projet-Lyc-e" class="bs" style="justify-content:center" target="_blank" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
           Voir sur GitHub
         </a>
-        <div class="download-warning">
-          ⚠ Réservé à un usage éducatif — voir Mentions légales
-        </div>
+        <div class="warn">⚠ Réservé à un usage éducatif — voir Mentions légales</div>
       </div>
     </div>
   </div>
 </section>
 
-<div class="glow-divider"></div>
+<div class="gdiv"></div>
 
-<!-- ============================================================
-     DOCUMENTATION
-     ============================================================ -->
-<section class="section docs" id="documentation" aria-labelledby="docs-title">
-  <div class="container">
-    <div class="section-label reveal">documentation utilisateur</div>
-    <h2 class="section-title reveal reveal-delay-1" id="docs-title"><em>Guide</em> d'utilisation</h2>
-
+<!-- ── DOCS ───────────────────────────────────────────────── -->
+<section class="section" id="documentation" aria-labelledby="doctitle">
+  <div class="cw">
+    <div class="slabel rv">documentation utilisateur</div>
+    <h2 class="stitle rv d1" id="doctitle"><em>Guide</em> d'utilisation</h2>
     <div class="docs-layout" style="margin-top:3rem">
-
-      <!-- sidebar nav -->
-      <nav class="docs-nav" aria-label="Sections de documentation">
-        <ul role="list" style="display:flex;flex-direction:column;gap:.25rem">
-          <li><button class="docs-nav-item active" data-panel="install" type="button"><span class="docs-nav-num">01</span>Installation</button></li>
-          <li><button class="docs-nav-item" data-panel="launch" type="button"><span class="docs-nav-num">02</span>Lancement</button></li>
-          <li><button class="docs-nav-item" data-panel="navigation" type="button"><span class="docs-nav-num">03</span>Navigation</button></li>
-          <li><button class="docs-nav-item" data-panel="modules" type="button"><span class="docs-nav-num">04</span>Modules détaillés</button></li>
-          <li><button class="docs-nav-item" data-panel="quiz" type="button"><span class="docs-nav-num">05</span>Quiz interactifs</button></li>
-          <li><button class="docs-nav-item" data-panel="logs" type="button"><span class="docs-nav-num">06</span>Logs</button></li>
-        </ul>
+      <nav class="docs-nav" aria-label="Sections">
+        <button class="dni act" data-p="install"><span class="dnn">01</span>Installation</button>
+        <button class="dni" data-p="launch"><span class="dnn">02</span>Lancement</button>
+        <button class="dni" data-p="nav"><span class="dnn">03</span>Navigation</button>
+        <button class="dni" data-p="mods"><span class="dnn">04</span>Modules</button>
+        <button class="dni" data-p="quiz"><span class="dnn">05</span>Quiz</button>
+        <button class="dni" data-p="logs"><span class="dnn">06</span>Logs</button>
       </nav>
+      <div>
+        <div class="dp act" id="dp-install">
+          <h3 class="dpt">Installation</h3>
+          <p class="dtxt">ECORP nécessite <strong>Python 3.11 exactement</strong>. Une version différente provoquera une erreur au démarrage.</p>
+          <div class="cb"><span class="cc"># 1. Téléchargez Python 3.11</span>
+<span class="cc"># https://www.python.org/downloads/release/python-3110/</span>
 
-      <!-- panels -->
-      <div class="docs-panels">
+<span class="cc"># 2. Extrayez le ZIP téléchargé</span>
+<span class="cc"># 3. Ouvrez un terminal dans le dossier</span>
 
-        <div id="panel-install" class="active">
-          <h3 class="docs-panel-title">Installation</h3>
-          <p class="docs-text">ECORP nécessite <strong>Python 3.11 exactement</strong>. Une version différente (3.10, 3.12…) provoquera une erreur au démarrage.</p>
-          <div class="code-block">
-<span class="code-comment"># 1. Téléchargez Python 3.11</span>
-<span class="code-comment"># https://www.python.org/downloads/release/python-3110/</span>
-
-<span class="code-comment"># 2. Extrayez le ZIP téléchargé</span>
-<span class="code-comment"># 3. Ouvrez un terminal dans le dossier extrait</span>
-
-<span class="code-comment"># 4. Exécutez le script d'installation</span>
-<span class="code-cmd">setup.bat</span>
-          </div>
-          <p class="docs-text">Le script <strong>setup.bat</strong> met à jour pip et installe automatiquement toutes les dépendances : requests, pynput, customtkinter, colorama, psutil, internetspeedtest, clipboard, Pillow, dnspython, bs4, aiohttp, python-nmap, cx_Freeze, pyarmor, nuitka, flet.</p>
-          <p class="docs-text"><strong>Nmap</strong> doit être installé séparément depuis <a href="https://nmap.org" target="_blank" rel="noopener">nmap.org</a> pour que le scan réseau fonctionne.</p>
+<span class="cc"># 4. Exécutez le script d'installation</span>
+<span class="cmd">setup.bat</span></div>
+          <p class="dtxt">Le script <strong>setup.bat</strong> installe automatiquement : requests, pynput, customtkinter, colorama, psutil, internetspeedtest, clipboard, Pillow, dnspython, bs4, aiohttp, python-nmap, cx_Freeze, pyarmor, nuitka, flet.</p>
+          <p class="dtxt"><strong>Nmap</strong> doit être installé séparément depuis <a href="https://nmap.org" target="_blank" rel="noopener">nmap.org</a>.</p>
         </div>
-
-        <div id="panel-launch">
-          <h3 class="docs-panel-title">Lancement</h3>
-          <div class="code-block">
-<span class="code-comment"># Dans le dossier du projet</span>
-<span class="code-cmd">python main.py</span>
-          </div>
-          <p class="docs-text">Au démarrage, ECORP vous demande de choisir la langue :</p>
-          <div class="code-block">
-<span class="code-string">🌐 Choisissez votre langue / Choose your language (FR/EN) :</span>
-          </div>
-          <p class="docs-text">Tapez <strong>FR</strong> pour le français ou <strong>EN</strong> pour l'anglais. Le choix peut être modifié à tout moment via l'option <strong>[62]</strong> dans les paramètres.</p>
+        <div class="dp" id="dp-launch">
+          <h3 class="dpt">Lancement</h3>
+          <div class="cb"><span class="cc"># Dans le dossier du projet</span>
+<span class="cmd">python main.py</span></div>
+          <p class="dtxt">Au démarrage, ECORP demande de choisir la langue :</p>
+          <div class="cb"><span class="cs">🌐 Choisissez votre langue / Choose your language (FR/EN) :</span></div>
+          <p class="dtxt">Tapez <strong>FR</strong> pour le français ou <strong>EN</strong> pour l'anglais. Le choix est modifiable à tout moment via l'option <strong>[62]</strong>.</p>
         </div>
-
-        <div id="panel-navigation">
-          <h3 class="docs-panel-title">Navigation dans le menu</h3>
-          <p class="docs-text">Le menu principal est organisé en <strong>7 catégories</strong>. Chaque outil est accessible par son numéro à deux chiffres :</p>
-          <table class="menu-table">
-            <thead>
-              <tr><th>Codes</th><th>Catégorie</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>[1x] 11–14</td><td>Mot de passe</td></tr>
-              <tr><td>[2x] 21–25</td><td>Pentest</td></tr>
-              <tr><td>[3x] 31–36</td><td>Réseau</td></tr>
-              <tr><td>[4x] 41–44</td><td>PC &amp; Système</td></tr>
-              <tr><td>[5x] 51–55</td><td>Autres outils</td></tr>
-              <tr><td>[6x] 61–63</td><td>Paramètres</td></tr>
-              <tr><td>[7x] 71–74</td><td>Aide &amp; Légalité</td></tr>
-            </tbody>
-          </table>
-          <p class="docs-text">Le prompt affiche <strong>utilisateur@machine $</strong> (ou <strong>#</strong> si administrateur). Après chaque outil, appuyez sur <strong>Entrée</strong> pour revenir au menu.</p>
+        <div class="dp" id="dp-nav">
+          <h3 class="dpt">Navigation dans le menu</h3>
+          <p class="dtxt">Le menu est organisé en <strong>7 catégories</strong>. Chaque outil est accessible par son numéro à deux chiffres :</p>
+          <table class="mtbl"><thead><tr><th>Codes</th><th>Catégorie</th></tr></thead><tbody>
+            <tr><td>[1x] 11–14</td><td>Mot de passe</td></tr>
+            <tr><td>[2x] 21–25</td><td>Pentest</td></tr>
+            <tr><td>[3x] 31–36</td><td>Réseau</td></tr>
+            <tr><td>[4x] 41–44</td><td>PC &amp; Système</td></tr>
+            <tr><td>[5x] 51–55</td><td>Autres outils</td></tr>
+            <tr><td>[6x] 61–63</td><td>Paramètres</td></tr>
+            <tr><td>[7x] 71–74</td><td>Aide &amp; Légalité</td></tr>
+          </tbody></table>
         </div>
-
-        <div id="panel-modules">
-          <h3 class="docs-panel-title">Modules détaillés</h3>
-
-          <div class="doc-step">
-            <div class="doc-step-title">[11] Générateur de mot de passe</div>
-            <p class="docs-text">Génère un mot de passe aléatoire avec critères configurables (longueur, symboles, chiffres).</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[12] Vérificateur de mot de passe</div>
-            <p class="docs-text">Analyse la robustesse d'un mot de passe saisi (longueur, complexité, entropie).</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[14] Mot de passe compromis</div>
-            <p class="docs-text">Vérifie si un mot de passe a fuité en interrogeant l'API <strong>Have I Been Pwned</strong> avec k-anonymat : seuls les 5 premiers caractères du hash SHA-1 sont envoyés.</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[21] DirBuster</div>
-            <p class="docs-text">Découverte de répertoires cachés sur un serveur web par force brute de chemins.</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[22] Générateur de fausse page HTML</div>
-            <p class="docs-text">Crée une page de phishing factice à des fins de démonstration et de sensibilisation.</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[23] Keylogger</div>
-            <p class="docs-text">Capture les frappes clavier localement avec interface graphique (CustomTkinter). Purement éducatif, aucune donnée n'est transmise.</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[31] Ping IP</div>
-            <p class="docs-text">Teste la connectivité vers une adresse IP ou un domaine.</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[32] Scan Réseau</div>
-            <p class="docs-text">Scan de ports via python-nmap sur une plage définie.</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[35] IP Lookup</div>
-            <p class="docs-text">Géolocalise une IP et affiche FAI, pays, ville, ASN.</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[36] Speedtest</div>
-            <p class="docs-text">Mesure le débit montant/descendant de la connexion Internet.</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[41] Informations système</div>
-            <p class="docs-text">Affiche OS, CPU, RAM, stockage, réseau.</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[51] Recherche d'utilisateur</div>
-            <p class="docs-text">OSINT : recherche un pseudonyme sur plusieurs plateformes.</p>
-          </div>
-          <div class="doc-step">
-            <div class="doc-step-title">[53] Chiffrement Python</div>
-            <p class="docs-text">Chiffre un fichier .py pour en protéger le code source.</p>
-          </div>
+        <div class="dp" id="dp-mods">
+          <h3 class="dpt">Modules détaillés</h3>
+          <div class="dstep"><div class="dstt">[11] Générateur de mot de passe</div><p class="dtxt">Génère un mot de passe aléatoire avec critères configurables (longueur, symboles, chiffres).</p></div>
+          <div class="dstep"><div class="dstt">[12] Vérificateur de mot de passe</div><p class="dtxt">Analyse la robustesse d'un mot de passe saisi (longueur, complexité, entropie).</p></div>
+          <div class="dstep"><div class="dstt">[14] Mot de passe compromis (HIBP)</div><p class="dtxt">Vérifie si un mot de passe a fuité via l'API Have I Been Pwned avec <strong>k-anonymat</strong> : seuls les 5 premiers caractères du hash SHA-1 sont transmis.</p></div>
+          <div class="dstep"><div class="dstt">[21] DirBuster</div><p class="dtxt">Découverte de répertoires cachés sur un serveur web par force brute de chemins.</p></div>
+          <div class="dstep"><div class="dstt">[22] Générateur de fausse page HTML</div><p class="dtxt">Crée une page de phishing factice à des fins de démonstration et de sensibilisation.</p></div>
+          <div class="dstep"><div class="dstt">[23] Keylogger</div><p class="dtxt">Capture les frappes clavier localement via CustomTkinter. Purement éducatif, aucune donnée n'est transmise.</p></div>
+          <div class="dstep"><div class="dstt">[31–36] Réseau</div><p class="dtxt">Ping IP, scan de ports Nmap, lecture des logs, géolocalisation IP (FAI, pays, ville, ASN), speedtest montant/descendant.</p></div>
+          <div class="dstep"><div class="dstt">[41] Informations système</div><p class="dtxt">Affiche OS, CPU, RAM, stockage, réseau.</p></div>
+          <div class="dstep"><div class="dstt">[51] Recherche d'utilisateur OSINT</div><p class="dtxt">Recherche un pseudonyme sur plusieurs plateformes publiques.</p></div>
+          <div class="dstep"><div class="dstt">[53] Chiffrement Python</div><p class="dtxt">Chiffre un fichier .py pour en protéger le code source.</p></div>
         </div>
-
-        <div id="panel-quiz">
-          <h3 class="docs-panel-title">Quiz interactifs (Flet)</h3>
-          <p class="docs-text">Trois quiz pédagogiques sont disponibles, affichés dans une interface graphique Flet :</p>
-          <div class="code-block">
-<span class="code-string">[13]</span> Quiz Mot de passe
-<span class="code-string">[24]</span> Quiz Sécurité (3 niveaux : facile, moyen, difficile)
-<span class="code-string">[34]</span> Quiz Réseau
-          </div>
-          <p class="docs-text">Ces modules nécessitent que <strong>flet</strong> soit installé. Ils s'ouvrent dans une fenêtre graphique séparée.</p>
+        <div class="dp" id="dp-quiz">
+          <h3 class="dpt">Quiz interactifs (Flet)</h3>
+          <p class="dtxt">Trois quiz pédagogiques dans une interface graphique Flet :</p>
+          <div class="cb"><span class="cs">[13]</span> Quiz Mot de passe
+<span class="cs">[24]</span> Quiz Sécurité (3 niveaux : facile, moyen, difficile)
+<span class="cs">[34]</span> Quiz Réseau</div>
+          <p class="dtxt">Ces modules nécessitent que <strong>flet</strong> soit installé. Ils s'ouvrent dans une fenêtre graphique séparée.</p>
         </div>
-
-        <div id="panel-logs">
-          <h3 class="docs-panel-title">Fichier de logs</h3>
-          <div class="code-block">
-<span class="code-comment"># Consulter les logs depuis le menu : [33]</span>
-<span class="code-comment"># Ou directement :</span>
-<span class="code-cmd">cat logs.txt</span>
-          </div>
-          <p class="docs-text">Le fichier <strong>logs.txt</strong> enregistre les actions effectuées lors des sessions. Il est lisible depuis l'option <strong>[33]</strong> du menu. C'est le seul fichier de données créé localement par ECORP.</p>
+        <div class="dp" id="dp-logs">
+          <h3 class="dpt">Fichier de logs</h3>
+          <div class="cb"><span class="cc"># Consulter via le menu : [33]</span>
+<span class="cc"># Ou directement :</span>
+<span class="cmd">cat logs.txt</span></div>
+          <p class="dtxt">Le fichier <strong>logs.txt</strong> enregistre les actions effectuées lors des sessions. C'est le seul fichier de données créé localement.</p>
         </div>
-
       </div>
     </div>
   </div>
 </section>
 
-<div class="glow-divider"></div>
+<div class="gdiv"></div>
 
-<!-- ============================================================
-     FAQ
-     ============================================================ -->
-<section class="section faq" id="faq" aria-labelledby="faq-title">
-  <div class="container">
-    <div class="section-label reveal">questions fréquentes</div>
-    <h2 class="section-title reveal reveal-delay-1" id="faq-title"><em>FAQ</em></h2>
-
-    <div class="faq-list" style="margin-top:3rem">
-
-      <div class="faq-item">
-        <button class="faq-question" aria-expanded="false" type="button">
-          Est-ce que ECORP est légal à utiliser ?
-          <span class="faq-icon" aria-hidden="true">+</span>
-        </button>
-        <div class="faq-answer" role="region">
-          <div class="faq-answer-inner">
-            ECORP est un outil éducatif conçu pour apprendre la cybersécurité dans un cadre pédagogique. Les outils de type pentest, keylogger ou phishing ne doivent être utilisés que sur vos propres systèmes ou dans un environnement de test autorisé. Toute utilisation sur des systèmes tiers sans autorisation explicite est illégale et sanctionnée par le Code pénal français (articles 323-1 et suivants).
-          </div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" aria-expanded="false" type="button">
-          Pourquoi Python 3.11 exactement ?
-          <span class="faq-icon" aria-hidden="true">+</span>
-        </button>
-        <div class="faq-answer" role="region">
-          <div class="faq-answer-inner">
-            ECORP utilise <strong>cx_Freeze</strong> pour la compilation en exécutable, qui a des contraintes de compatibilité strictes. Python 3.11 est la version sur laquelle le projet a été développé et testé. D'autres versions peuvent fonctionner, mais cx_Freeze sera désactivé et certains comportements peuvent différer.
-          </div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" aria-expanded="false" type="button">
-          Le vérificateur de mot de passe compromis envoie-t-il mon mot de passe sur Internet ?
-          <span class="faq-icon" aria-hidden="true">+</span>
-        </button>
-        <div class="faq-answer" role="region">
-          <div class="faq-answer-inner">
-            Non. ECORP utilise la technique du <strong>k-anonymat</strong> de l'API Have I Been Pwned : seuls les 5 premiers caractères du hash SHA-1 de votre mot de passe sont transmis. Votre mot de passe réel ne quitte jamais votre machine.
-          </div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" aria-expanded="false" type="button">
-          Le keylogger enregistre-t-il mes données quelque part ?
-          <span class="faq-icon" aria-hidden="true">+</span>
-        </button>
-        <div class="faq-answer" role="region">
-          <div class="faq-answer-inner">
-            Le keylogger est entièrement local. Il capture les frappes et les affiche dans l'interface graphique, mais ne les envoie à aucun serveur distant. Il s'agit d'un outil démonstratif pour comprendre le fonctionnement de ce type de logiciel malveillant.
-          </div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" aria-expanded="false" type="button">
-          Le programme fonctionne-t-il sur Linux ou macOS ?
-          <span class="faq-icon" aria-hidden="true">+</span>
-        </button>
-        <div class="faq-answer" role="region">
-          <div class="faq-answer-inner">
-            ECORP a été développé et testé exclusivement sous <strong>Windows 10/11</strong>. Certains modules utilisent des APIs Windows (winreg, ctypes.windll) et ne fonctionneront pas sur Linux ou macOS. Une adaptation pourrait être envisagée dans une version future.
-          </div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" aria-expanded="false" type="button">
-          Comment mettre à jour ECORP ?
-          <span class="faq-icon" aria-hidden="true">+</span>
-        </button>
-        <div class="faq-answer" role="region">
-          <div class="faq-answer-inner">
-            Téléchargez simplement la dernière version du dépôt GitHub et réexécutez <strong>setup.bat</strong> pour mettre à jour les dépendances. Le projet est open-source : vous pouvez aussi cloner le dépôt avec Git et effectuer un <code style="font-family:var(--mono);color:var(--accent)">git pull</code> pour les mises à jour futures.
-          </div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" aria-expanded="false" type="button">
-          Le scan réseau ne fonctionne pas, que faire ?
-          <span class="faq-icon" aria-hidden="true">+</span>
-        </button>
-        <div class="faq-answer" role="region">
-          <div class="faq-answer-inner">
-            python-nmap est uniquement un wrapper Python. Vous devez installer Nmap sur votre système depuis <a href="https://nmap.org" target="_blank" rel="noopener">nmap.org</a>. Sur Windows, ajoutez Nmap au PATH lors de l'installation. Relancez ensuite ECORP en tant qu'administrateur pour que le scan fonctionne correctement.
-          </div>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question" aria-expanded="false" type="button">
-          Puis-je contribuer au projet ?
-          <span class="faq-icon" aria-hidden="true">+</span>
-        </button>
-        <div class="faq-answer" role="region">
-          <div class="faq-answer-inner">
-            Oui ! Le projet est sous licence <strong>GPL-2.0</strong> et hébergé sur GitHub. Vous pouvez forker le dépôt, proposer des pull requests, signaler des bugs via les Issues ou suggérer de nouvelles fonctionnalités éducatives.
-          </div>
-        </div>
-      </div>
-
+<!-- ── FAQ ───────────────────────────────────────────────── -->
+<section class="section" id="faq" aria-labelledby="faqtitle">
+  <div class="cw">
+    <div class="slabel rv">questions fréquentes</div>
+    <h2 class="stitle rv d1" id="faqtitle"><em>FAQ</em></h2>
+    <div class="faq-l" style="margin-top:3rem">
+      <div class="fi"><button class="fq" aria-expanded="false">Est-ce qu'ECORP est légal à utiliser ?<span class="fi_ico">+</span></button><div class="fa"><div class="fai">ECORP est un outil éducatif. Les outils pentest, keylogger ou phishing ne doivent être utilisés que sur vos propres systèmes ou dans un environnement de test autorisé. Toute utilisation sur des systèmes tiers sans autorisation est illégale (art. 323-1 à 323-8 du Code pénal français).</div></div></div>
+      <div class="fi"><button class="fq" aria-expanded="false">Pourquoi Python 3.11 exactement ?<span class="fi_ico">+</span></button><div class="fa"><div class="fai">ECORP utilise <strong>cx_Freeze</strong> pour la compilation en exécutable, qui a des contraintes de compatibilité strictes. Python 3.11 est la version développée et testée. D'autres versions peuvent fonctionner mais cx_Freeze sera désactivé.</div></div></div>
+      <div class="fi"><button class="fq" aria-expanded="false">Le vérificateur HIBP envoie-t-il mon mot de passe ?<span class="fi_ico">+</span></button><div class="fa"><div class="fai">Non. ECORP utilise le <strong>k-anonymat</strong> : seuls les 5 premiers caractères du hash SHA-1 sont transmis. Votre mot de passe réel ne quitte jamais votre machine.</div></div></div>
+      <div class="fi"><button class="fq" aria-expanded="false">Le keylogger enregistre-t-il mes données quelque part ?<span class="fi_ico">+</span></button><div class="fa"><div class="fai">Le keylogger est entièrement local. Il capture les frappes et les affiche dans l'interface graphique, mais ne les envoie à aucun serveur distant.</div></div></div>
+      <div class="fi"><button class="fq" aria-expanded="false">Le programme fonctionne-t-il sur Linux ou macOS ?<span class="fi_ico">+</span></button><div class="fa"><div class="fai">ECORP a été développé exclusivement sous <strong>Windows 10/11</strong>. Certains modules utilisent des APIs Windows (winreg, ctypes.windll) et ne fonctionneront pas sur Linux ou macOS.</div></div></div>
+      <div class="fi"><button class="fq" aria-expanded="false">Le scan réseau ne fonctionne pas, que faire ?<span class="fi_ico">+</span></button><div class="fa"><div class="fai">python-nmap est un wrapper : Nmap doit être installé depuis <a href="https://nmap.org" target="_blank" rel="noopener">nmap.org</a> et ajouté au PATH. Relancez ensuite ECORP en tant qu'administrateur.</div></div></div>
+      <div class="fi"><button class="fq" aria-expanded="false">Puis-je contribuer au projet ?<span class="fi_ico">+</span></button><div class="fa"><div class="fai">Oui ! Licence <strong>GPL-2.0</strong>, hébergé sur GitHub. Forkez, proposez des pull requests ou signalez des bugs via les Issues.</div></div></div>
     </div>
   </div>
 </section>
 
-<div class="glow-divider"></div>
+<div class="gdiv"></div>
 
-<!-- ============================================================
-     LEGAL
-     ============================================================ -->
-<section class="section legal" id="mentions-legales" aria-labelledby="legal-title">
-  <div class="container">
-    <div class="section-label reveal">légalité</div>
-    <h2 class="section-title reveal reveal-delay-1" id="legal-title"><em>Mentions</em> légales</h2>
-    <p class="section-subtitle reveal reveal-delay-2" style="margin-bottom:3rem">
-      Conformément aux dispositions légales françaises en vigueur.
-    </p>
+<!-- ── LEGAL ─────────────────────────────────────────────── -->
+<section class="section" id="legales" aria-labelledby="legtitle">
+  <div class="cw">
+    <div class="slabel rv">légalité &amp; RGPD</div>
+    <h2 class="stitle rv d1" id="legtitle"><em>Mentions</em> légales</h2>
+    <p class="ssub rv d2">Conformément aux dispositions légales françaises et au RGPD (UE) 2016/679.</p>
+    <div class="lgrid">
+      <div class="lcard rv"><h3 class="lct">Éditeur du projet</h3><p class="ltxt">Développé dans le cadre d'un <strong>projet scolaire de lycée</strong> par <strong>juto222</strong>.<br/>Dépôt : <a href="https://github.com/juto222/Projet-Lyc-e" target="_blank" rel="noopener">github.com/juto222/Projet-Lyc-e</a></p></div>
+      <div class="lcard rv d1"><h3 class="lct">Nature &amp; Licence</h3><p class="ltxt">Outil <strong>éducatif</strong> open-source sous <strong>GPL-2.0</strong>. Toute distribution doit conserver la mention de licence.</p></div>
+      <div class="lcard rv"><h3 class="lct">Avertissement légal</h3><p class="ltxt"><ul><li>Usage strictement pédagogique sur vos propres systèmes</li><li>Utilisation malveillante passible de poursuites (art. 323-1 à 323-8 CPF)</li><li>Éditeur non responsable d'un usage détourné</li><li>Keylogger interdit sans consentement</li></ul></p></div>
+      <div class="lcard rv d1"><h3 class="lct">Vos droits RGPD</h3><p class="ltxt">Aucune donnée personnelle n'est collectée par l'éditeur. Droit d'effacement : supprimez <strong>logs.txt</strong>. Réclamation : <a href="https://cnil.fr" target="_blank" rel="noopener">cnil.fr</a><br/><br/>Ce site n'utilise aucun cookie, tracker, ni analytics.</p></div>
+    </div>
 
-    <div class="legal-grid">
-      <div class="legal-card reveal">
-        <h3 class="legal-card-title">Éditeur du projet</h3>
-        <p class="legal-text">Ce logiciel a été développé dans le cadre d'un <strong>projet scolaire de lycée</strong> par <strong>juto222</strong> et ses contributeurs, hébergé publiquement sur GitHub.</p>
-        <p class="legal-text">Dépôt : <a href="https://github.com/juto222/Projet-Lyc-e" target="_blank" rel="noopener">github.com/juto222/Projet-Lyc-e</a></p>
-      </div>
-
-      <div class="legal-card reveal reveal-delay-1">
-        <h3 class="legal-card-title">Nature du logiciel</h3>
-        <p class="legal-text">ECORP est un <strong>outil éducatif</strong> destiné à l'apprentissage de la cybersécurité et des réseaux informatiques. Il est distribué gratuitement en open-source sous licence <strong>GPL-2.0</strong>.</p>
-      </div>
-
-      <div class="legal-card reveal">
-        <h3 class="legal-card-title">Avertissement légal</h3>
-        <p class="legal-text"><ul>
-          <li>Usage strictement pédagogique et sur systèmes dont vous êtes propriétaire ou avez l'autorisation explicite</li>
-          <li>Toute utilisation malveillante est passible de poursuites (art. 323-1 à 323-8 du Code pénal)</li>
-          <li>L'éditeur décline toute responsabilité en cas d'usage détourné</li>
-          <li>Le phishing simulé ne doit jamais cibler de véritables utilisateurs</li>
-          <li>Le keylogger est interdit d'installation sur tout appareil sans consentement</li>
-        </ul></p>
-      </div>
-
-      <div class="legal-card reveal reveal-delay-1">
-        <h3 class="legal-card-title">Licence GPL-2.0 &amp; Droit applicable</h3>
-        <p class="legal-text">Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier selon les termes de la <strong>Licence Publique Générale GNU version 2</strong>. Le code source complet est disponible dans le dépôt GitHub. Toute distribution doit conserver la mention de licence et rester open-source.</p>
-        <p class="legal-text">Ce projet est soumis au <strong>droit français</strong>. En cas de litige, les tribunaux français sont compétents.</p>
-      </div>
+    <div class="rtw rv" style="margin-top:2rem">
+      <table class="rt"><thead><tr><th>Module</th><th>Données traitées</th><th>Local</th><th>Envoi</th><th>Tiers</th></tr></thead>
+      <tbody>
+        <tr><td>Générateur / Vérificateur MDP</td><td>MDP en mémoire vive uniquement</td><td><span class="no">NON</span></td><td><span class="no">NON</span></td><td>Aucun</td></tr>
+        <tr><td>MDP Compromis (HIBP)</td><td>5 chars hash SHA-1 seulement</td><td><span class="no">NON</span></td><td><span class="yo">OUI</span></td><td>Have I Been Pwned</td></tr>
+        <tr><td>Keylogger</td><td>Frappes (affichage local)</td><td><span class="no">NON</span></td><td><span class="no">NON</span></td><td>Aucun</td></tr>
+        <tr><td>IP Lookup</td><td>Adresse IP interrogée</td><td><span class="no">NON</span></td><td><span class="yo">OUI</span></td><td>API géolocalisation</td></tr>
+        <tr><td>Speedtest</td><td>IP publique</td><td><span class="no">NON</span></td><td><span class="yo">OUI</span></td><td>Speedtest.net</td></tr>
+        <tr><td>OSINT</td><td>Pseudonyme saisi</td><td><span class="no">NON</span></td><td><span class="yo">OUI</span></td><td>Plateformes publiques</td></tr>
+        <tr><td>Scan / Ping / DirBuster</td><td>IP/domaine cible</td><td><span class="no">NON</span></td><td><span class="yo">OUI</span></td><td>Hôte cible</td></tr>
+        <tr><td>Logs [33]</td><td>Activité locale</td><td><span class="lo">logs.txt</span></td><td><span class="no">NON</span></td><td>Aucun</td></tr>
+        <tr><td>Informations système</td><td>OS, CPU, RAM (affichage)</td><td><span class="no">NON</span></td><td><span class="no">NON</span></td><td>Aucun</td></tr>
+      </tbody></table>
     </div>
   </div>
 </section>
-
-<div class="glow-divider"></div>
-
-<!-- ============================================================
-     RGPD
-     ============================================================ -->
-<section class="section" id="rgpd" aria-labelledby="rgpd-title">
-  <div class="container">
-    <div class="section-label reveal">protection des données</div>
-    <h2 class="section-title reveal reveal-delay-1" id="rgpd-title">Informations <em>RGPD</em></h2>
-    <p class="section-subtitle reveal reveal-delay-2" style="margin-bottom:2rem">
-      Conformément au Règlement Général sur la Protection des Données (UE) 2016/679 du 27 avril 2016.
-    </p>
-
-    <div class="legal-card reveal" style="margin-bottom:2rem">
-      <h3 class="legal-card-title">Principe général</h3>
-      <p class="legal-text">ECORP est un logiciel qui s'exécute <strong>entièrement en local sur votre machine</strong>. Il ne dispose d'aucun serveur centralisé, d'aucune base de données distante et d'aucun système d'authentification. <strong>Aucune donnée personnelle n'est collectée, stockée ou transmise</strong> à l'éditeur du projet.</p>
-    </div>
-
-    <div class="rgpd-table-wrap reveal">
-      <table class="rgpd-table">
-        <thead>
-          <tr>
-            <th>Module</th>
-            <th>Données traitées</th>
-            <th>Stockage local</th>
-            <th>Envoi distant</th>
-            <th>Destinataire tiers</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Générateur / Vérificateur MDP</td>
-            <td>MDP saisi (mémoire vive uniquement)</td>
-            <td><span class="badge-no">NON</span></td>
-            <td><span class="badge-no">NON</span></td>
-            <td>Aucun</td>
-          </tr>
-          <tr>
-            <td>MDP Compromis (HIBP)</td>
-            <td>5 premiers chars du hash SHA-1 uniquement</td>
-            <td><span class="badge-no">NON</span></td>
-            <td><span class="badge-yes">OUI</span></td>
-            <td>Have I Been Pwned</td>
-          </tr>
-          <tr>
-            <td>Keylogger</td>
-            <td>Frappes clavier (affichées localement)</td>
-            <td><span class="badge-no">NON</span></td>
-            <td><span class="badge-no">NON</span></td>
-            <td>Aucun</td>
-          </tr>
-          <tr>
-            <td>IP Lookup</td>
-            <td>Adresse IP interrogée</td>
-            <td><span class="badge-no">NON</span></td>
-            <td><span class="badge-yes">OUI</span></td>
-            <td>API géolocalisation publique</td>
-          </tr>
-          <tr>
-            <td>Speedtest</td>
-            <td>Adresse IP publique</td>
-            <td><span class="badge-no">NON</span></td>
-            <td><span class="badge-yes">OUI</span></td>
-            <td>Speedtest.net</td>
-          </tr>
-          <tr>
-            <td>Recherche utilisateur (OSINT)</td>
-            <td>Pseudonyme saisi</td>
-            <td><span class="badge-no">NON</span></td>
-            <td><span class="badge-yes">OUI</span></td>
-            <td>Plateformes web publiques</td>
-          </tr>
-          <tr>
-            <td>Scan Réseau / Ping / DirBuster</td>
-            <td>IP/domaine cible, plages de ports</td>
-            <td><span class="badge-no">NON</span></td>
-            <td><span class="badge-yes">OUI</span></td>
-            <td>Hôte cible uniquement</td>
-          </tr>
-          <tr>
-            <td>Logs système ([33])</td>
-            <td>Traces d'activité locale</td>
-            <td><span class="badge-local">logs.txt</span></td>
-            <td><span class="badge-no">NON</span></td>
-            <td>Aucun</td>
-          </tr>
-          <tr>
-            <td>Informations système</td>
-            <td>OS, CPU, RAM (affichage uniquement)</td>
-            <td><span class="badge-no">NON</span></td>
-            <td><span class="badge-no">NON</span></td>
-            <td>Aucun</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="legal-grid" style="margin-top:1.5rem">
-      <div class="legal-card reveal">
-        <h3 class="legal-card-title">Base légale des traitements</h3>
-        <p class="legal-text">Les requêtes vers des APIs tierces (HIBP, géolocalisation IP) sont initiées <strong>exclusivement à la demande de l'utilisateur</strong> et reposent sur le consentement explicite (art. 6.1.a RGPD). Aucun traitement n'est automatique.</p>
-      </div>
-      <div class="legal-card reveal reveal-delay-1">
-        <h3 class="legal-card-title">Vos droits &amp; Cookies</h3>
-        <p class="legal-text">Vous disposez des droits d'accès (art. 15), de rectification (art. 16), d'effacement (supprimez logs.txt) et d'opposition (art. 21). Réclamation auprès de la CNIL : <a href="https://cnil.fr" target="_blank" rel="noopener">cnil.fr</a></p>
-        <p class="legal-text">ECORP n'utilise aucun cookie, aucun pixel de tracking, aucune analytics. Ce site de présentation n'utilise pas non plus de cookies tiers.</p>
-      </div>
-    </div>
-
-  </div>
-</section>
-
 </main>
 
-<!-- ============================================================
-     FOOTER
-     ============================================================ -->
-<footer class="footer">
-  <div class="container">
-    <div class="footer-inner">
-      <div class="footer-logo">EC<span>O</span>RP // Projet Lycée · Licence GPL-2.0 · Open-source · 2026</div>
-      <nav class="footer-links" aria-label="Liens de pied de page">
-        <a href="#fonctionnalites">Modules</a>
-        <a href="#telecharger">Télécharger</a>
-        <a href="#documentation">Docs</a>
-        <a href="#faq">FAQ</a>
-        <a href="#mentions-legales">Légal</a>
-        <a href="#rgpd">RGPD</a>
-      </nav>
-      <div class="footer-right">⚠ Usage éducatif uniquement</div>
-    </div>
-  </div>
+<footer>
+  <div class="cw"><div class="fi2">
+    <div class="fl">EC<span>O</span>RP // Projet Lycée · GPL-2.0 · Open-source · 2026</div>
+    <nav class="fln" aria-label="Liens footer">
+      <a href="#modules">Modules</a><a href="#telecharger">Télécharger</a>
+      <a href="#documentation">Docs</a><a href="#faq">FAQ</a>
+      <a href="#legales">Légal</a>
+    </nav>
+    <div class="fr">⚠ Usage éducatif uniquement</div>
+  </div></div>
 </footer>
 
-<!-- ============================================================
-     SCRIPTS
-     ============================================================ -->
+<!-- Three.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <script>
-/* --------------------------------------------------------
-   Canvas particle/grid background
-   -------------------------------------------------------- */
-(function() {
-  const canvas = document.getElementById('bg-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, dots, animId;
-  let mouse = { x: -9999, y: -9999 };
+/* ============================================================
+   UTILITIES
+============================================================ */
+const $ = id => document.getElementById(id);
+const lerp = (a,b,t) => a + (b-a)*t;
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const map = (v,a,b,c,d) => c + (clamp(v,a,b)-a)/(b-a)*(d-c);
 
-  const ACCENT = [0, 220, 130];
-  const DOT_SPACING = 48;
-  const DOT_RADIUS = 1;
-  const DOT_GLOW_RADIUS = 120;
-
-  function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    buildDots();
-  }
-
-  function buildDots() {
-    dots = [];
-    const cols = Math.ceil(W / DOT_SPACING) + 1;
-    const rows = Math.ceil(H / DOT_SPACING) + 1;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        dots.push({ x: c * DOT_SPACING, y: r * DOT_SPACING });
-      }
-    }
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    const scrollY = window.scrollY;
-    dots.forEach(d => {
-      const sy = d.y - scrollY * 0.15;
-      const dx = d.x - mouse.x;
-      const dy = sy - mouse.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const t = Math.max(0, 1 - dist / DOT_GLOW_RADIUS);
-      const alpha = 0.06 + t * 0.45;
-      const size = DOT_RADIUS + t * 2;
-      ctx.beginPath();
-      ctx.arc(d.x, sy, size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${ACCENT[0]},${ACCENT[1]},${ACCENT[2]},${alpha})`;
-      ctx.fill();
-    });
-  }
-
-  function loop() {
-    draw();
-    animId = requestAnimationFrame(loop);
-  }
-
-  window.addEventListener('mousemove', e => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-  });
-  window.addEventListener('resize', resize);
-  resize();
-  loop();
-})();
-
-/* --------------------------------------------------------
-   Scroll progress bar
-   -------------------------------------------------------- */
-const progressEl = document.getElementById('progress');
+/* ── scroll progress bar ─────────────────────────────────── */
+const spb = $('spb');
 window.addEventListener('scroll', () => {
   const s = document.documentElement.scrollTop;
   const h = document.documentElement.scrollHeight - window.innerHeight;
-  progressEl.style.transform = `scaleX(${s / h})`;
-  progressEl.style.width = '100%';
-}, { passive: true });
+  spb.style.transform = `scaleX(${s/h})`;
+},{passive:true});
 
-/* --------------------------------------------------------
-   Nav scrolled state + mobile toggle
-   -------------------------------------------------------- */
-const nav = document.getElementById('nav');
-const navLinks = document.getElementById('nav-links');
-const navToggle = document.getElementById('nav-toggle');
+/* ── nav scroll state ────────────────────────────────────── */
+const navEl = $('nav');
+window.addEventListener('scroll',()=>navEl.classList.toggle('sc',scrollY>30),{passive:true});
 
-window.addEventListener('scroll', () => {
-  nav.classList.toggle('scrolled', window.scrollY > 30);
-}, { passive: true });
+/* ── mobile nav ──────────────────────────────────────────── */
+const nl=$('nl'), hbg=$('hbg');
+hbg.addEventListener('click',()=>{const o=nl.classList.toggle('open');hbg.setAttribute('aria-expanded',o)});
+nl.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{nl.classList.remove('open');hbg.setAttribute('aria-expanded','false')}));
 
-navToggle.addEventListener('click', () => {
-  const open = navLinks.classList.toggle('open');
-  navToggle.setAttribute('aria-expanded', open);
-});
+/* ── scroll reveal ───────────────────────────────────────── */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');io.unobserve(e.target)}}),{threshold:.1});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
 
-navLinks.querySelectorAll('a').forEach(a => {
-  a.addEventListener('click', () => {
-    navLinks.classList.remove('open');
-    navToggle.setAttribute('aria-expanded', 'false');
+/* ── FAQ ─────────────────────────────────────────────────── */
+document.querySelectorAll('.fq').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const fi=b.closest('.fi'), was=fi.classList.contains('open');
+    document.querySelectorAll('.fi.open').forEach(el=>{el.classList.remove('open');el.querySelector('.fq').setAttribute('aria-expanded','false')});
+    if(!was){fi.classList.add('open');b.setAttribute('aria-expanded','true')}
   });
 });
 
-/* --------------------------------------------------------
-   Scroll reveal
-   -------------------------------------------------------- */
-const revealEls = document.querySelectorAll('.reveal');
-const io = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add('visible');
-      io.unobserve(e.target);
-    }
-  });
-}, { threshold: 0.12 });
-revealEls.forEach(el => io.observe(el));
-
-/* --------------------------------------------------------
-   Module cards mouse gradient
-   -------------------------------------------------------- */
-document.querySelectorAll('.module-card').forEach(card => {
-  card.addEventListener('mousemove', e => {
-    const rect = card.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1) + '%';
-    const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1) + '%';
-    card.style.setProperty('--mx', x);
-    card.style.setProperty('--my', y);
+/* ── docs tabs ───────────────────────────────────────────── */
+document.querySelectorAll('.dni').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const p=b.dataset.p;
+    document.querySelectorAll('.dni').forEach(x=>x.classList.remove('act'));
+    document.querySelectorAll('.dp').forEach(x=>x.classList.remove('act'));
+    b.classList.add('act');
+    const panel=document.getElementById('dp-'+p);
+    if(panel) panel.classList.add('act');
   });
 });
 
-/* --------------------------------------------------------
-   Animated terminal
-   -------------------------------------------------------- */
-(function() {
-  const body = document.getElementById('terminal-body');
-  if (!body) return;
+/* ============================================================
+   THREE.JS — HERO BACKGROUND
+   Particle sphere that reacts to mouse
+============================================================ */
+(function(){
+  const canvas=$('c3d');
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setClearColor(0x000000,0);
 
-  const lines = [
-    { type: 'cmd', prompt: 'root@ecorp $', text: 'python main.py' },
-    { type: 'out', text: '' },
-    { type: 'out', text: '🌐 Choisissez votre langue / Choose your language (FR/EN) :', cls: 'terminal-section' },
-    { type: 'cmd', prompt: 'root@ecorp $', text: 'FR', delay: 800 },
-    { type: 'out', text: '' },
-    { type: 'out', text: '[ ECORP ] Chargement des modules...', cls: 'terminal-success' },
-    { type: 'out', text: '' },
-    { type: 'out', text: '  [1] 🔐 Mot de passe   [2] 🛡 Pentest' },
-    { type: 'out', text: '  [3] 📊 Réseau         [4] 💻 PC & Système' },
-    { type: 'out', text: '  [5] 🧩 Autres outils  [6] ⚙️  Paramètres' },
-    { type: 'out', text: '' },
-    { type: 'cmd', prompt: 'root@ecorp #', text: '_', cursor: true },
-  ];
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(60,1,0.1,100);
+  cam.position.z=5;
 
-  let i = 0;
-  function renderNext() {
-    if (i >= lines.length) return;
-    const l = lines[i++];
-    const delay = l.delay || 120;
+  // Particle sphere
+  const N=1800;
+  const positions=new Float32Array(N*3);
+  const colors=new Float32Array(N*3);
+  const C1=new THREE.Color('#00DC82');
+  const C2=new THREE.Color('#0A3B26');
 
-    setTimeout(() => {
-      const div = document.createElement('div');
-      if (l.type === 'cmd') {
-        div.className = 'terminal-line';
-        div.innerHTML = `<span class="terminal-prompt">${l.prompt}</span><span class="terminal-cmd">${l.cursor ? '' : l.text}${l.cursor ? '<span class="terminal-cursor"></span>' : ''}</span>`;
-      } else {
-        div.className = 'terminal-output ' + (l.cls || '');
-        div.textContent = l.text;
-      }
-      body.appendChild(div);
-      renderNext();
-    }, delay);
+  for(let i=0;i<N;i++){
+    const phi=Math.acos(-1+2*i/N);
+    const theta=Math.sqrt(N*Math.PI)*phi;
+    const r=2.2+Math.random()*0.15;
+    positions[i*3]=r*Math.sin(phi)*Math.cos(theta);
+    positions[i*3+1]=r*Math.sin(phi)*Math.sin(theta);
+    positions[i*3+2]=r*Math.cos(phi);
+    const t=Math.random();
+    const c=C1.clone().lerp(C2,t*t);
+    colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b;
   }
 
-  setTimeout(renderNext, 600);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+  const mat=new THREE.PointsMaterial({size:.035,vertexColors:true,transparent:true,opacity:.85,sizeAttenuation:true});
+  const sphere=new THREE.Points(geo,mat);
+  scene.add(sphere);
+
+  // Wireframe icosahedron inside
+  const icoGeo=new THREE.IcosahedronGeometry(1.5,1);
+  const icoMat=new THREE.MeshBasicMaterial({color:0x00DC82,wireframe:true,transparent:true,opacity:.04});
+  const ico=new THREE.Mesh(icoGeo,icoMat);
+  scene.add(ico);
+
+  // Inner glow sphere
+  const glowGeo=new THREE.SphereGeometry(1.2,32,32);
+  const glowMat=new THREE.MeshBasicMaterial({color:0x00DC82,transparent:true,opacity:.02,wireframe:false});
+  const glow=new THREE.Mesh(glowGeo,glowMat);
+  scene.add(glow);
+
+  let mouse={x:0,y:0}, target={x:0,y:0};
+  document.addEventListener('mousemove',e=>{
+    mouse.x=(e.clientX/innerWidth-.5)*1.8;
+    mouse.y=-(e.clientY/innerHeight-.5)*1.8;
+  },{passive:true});
+
+  function resize(){
+    const w=canvas.clientWidth, h=canvas.clientHeight;
+    renderer.setSize(w,h,false);
+    cam.aspect=w/h;
+    cam.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+
+  let t=0;
+  function animate(){
+    requestAnimationFrame(animate);
+    t+=0.004;
+    target.x=lerp(target.x,mouse.x,.04);
+    target.y=lerp(target.y,mouse.y,.04);
+    sphere.rotation.y=t*.18+target.x*.3;
+    sphere.rotation.x=Math.sin(t*.12)*.08+target.y*.3;
+    ico.rotation.y=-t*.12;
+    ico.rotation.z=t*.07;
+    renderer.render(scene,cam);
+  }
+  animate();
 })();
 
-/* --------------------------------------------------------
-   FAQ accordion
-   -------------------------------------------------------- */
-document.querySelectorAll('.faq-question').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const item = btn.closest('.faq-item');
-    const isOpen = item.classList.contains('open');
-    // close all
-    document.querySelectorAll('.faq-item.open').forEach(el => {
-      el.classList.remove('open');
-      el.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
-    });
-    if (!isOpen) {
-      item.classList.add('open');
-      btn.setAttribute('aria-expanded', 'true');
+/* ============================================================
+   THREE.JS — SCROLL-DRIVEN 3D EXPERIENCE
+   A DNA/helix of nodes that rotate and light up per step
+============================================================ */
+(function(){
+  const canvas=$('sc3d');
+  if(!canvas) return;
+
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setClearColor(0x000000,0);
+
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(55,1,0.1,200);
+  cam.position.set(0,0,9);
+
+  /* ─ Lights ─ */
+  scene.add(new THREE.AmbientLight(0x112233,2));
+  const pL=new THREE.PointLight(0x00DC82,4,20);
+  pL.position.set(2,2,4);
+  scene.add(pL);
+  const pL2=new THREE.PointLight(0x0066FF,.8,20);
+  pL2.position.set(-3,-1,3);
+  scene.add(pL2);
+
+  /* ─ Central rotating ring torus ─ */
+  const torusGeo=new THREE.TorusGeometry(2.2,.012,6,120);
+  const torusMat=new THREE.MeshBasicMaterial({color:0x00DC82,transparent:true,opacity:.15});
+  const torus=new THREE.Mesh(torusGeo,torusMat);
+  scene.add(torus);
+  const torus2=new THREE.TorusGeometry(2.2,.012,6,120);
+  const tm2=new THREE.MeshBasicMaterial({color:0x00DC82,transparent:true,opacity:.07});
+  const ring2=new THREE.Mesh(new THREE.TorusGeometry(1.4,.008,6,80),tm2);
+  ring2.rotation.x=Math.PI/2;
+  scene.add(ring2);
+
+  /* ─ DNA Helix nodes ─ */
+  const NODE_COUNT=48;
+  const STRAND_RADIUS=1.7;
+  const HELIX_HEIGHT=6;
+  const nodes=[];
+  const connectors=[];
+
+  const nodeMat=new THREE.MeshPhongMaterial({color:0x00DC82,emissive:0x002211,shininess:80,transparent:true,opacity:.9});
+  const nodeDimMat=new THREE.MeshPhongMaterial({color:0x0D3322,emissive:0x000000,shininess:20,transparent:true,opacity:.5});
+  const connMat=new THREE.LineBasicMaterial({color:0x00DC82,transparent:true,opacity:.15});
+  const connDimMat=new THREE.LineBasicMaterial({color:0x1A4433,transparent:true,opacity:.07});
+
+  // Rung connectors (horizontal bridges between the two strands)
+  const rungMat=new THREE.LineBasicMaterial({color:0x00DC82,transparent:true,opacity:.12});
+
+  for(let i=0;i<NODE_COUNT;i++){
+    const angle=(i/NODE_COUNT)*Math.PI*8; // 4 full turns
+    const y=((i/NODE_COUNT)-.5)*HELIX_HEIGHT;
+
+    // Strand A
+    const xa=Math.cos(angle)*STRAND_RADIUS;
+    const za=Math.sin(angle)*STRAND_RADIUS;
+
+    // Strand B (opposite phase)
+    const xb=Math.cos(angle+Math.PI)*STRAND_RADIUS;
+    const zb=Math.sin(angle+Math.PI)*STRAND_RADIUS;
+
+    const sizeA=.055+Math.random()*.03;
+    const sizeB=.045+Math.random()*.02;
+
+    const gA=new THREE.SphereGeometry(sizeA,12,12);
+    const mA=nodeDimMat.clone();
+    const nA=new THREE.Mesh(gA,mA);
+    nA.position.set(xa,y,za);
+    scene.add(nA);
+
+    const gB=new THREE.SphereGeometry(sizeB,10,10);
+    const mB=nodeDimMat.clone();
+    const nB=new THREE.Mesh(gB,mB);
+    nB.position.set(xb,y,zb);
+    scene.add(nB);
+
+    nodes.push({meshA:nA,meshB:nB,matA:mA,matB:mB,i});
+
+    // Rung connecting A to B
+    if(i%3===0){
+      const pts=[new THREE.Vector3(xa,y,za),new THREE.Vector3(xb,y,zb)];
+      const rungGeo=new THREE.BufferGeometry().setFromPoints(pts);
+      const rung=new THREE.Line(rungGeo,rungMat.clone());
+      scene.add(rung);
+      connectors.push(rung);
     }
-  });
-});
 
-/* --------------------------------------------------------
-   Docs tab nav
-   -------------------------------------------------------- */
-const docsNavBtns = document.querySelectorAll('.docs-nav-item');
-const docsPanels = document.querySelectorAll('.docs-panels > div');
+    // Spine connector to next node A
+    if(i>0){
+      const prev=nodes[i-1];
+      const pts=[prev.meshA.position.clone(),nA.position.clone()];
+      const lGeo=new THREE.BufferGeometry().setFromPoints(pts);
+      const line=new THREE.Line(lGeo,connDimMat.clone());
+      scene.add(line);
+    }
+  }
 
-docsNavBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const panelId = btn.dataset.panel;
-    docsNavBtns.forEach(b => b.classList.remove('active'));
-    docsPanels.forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    const target = document.getElementById('panel-' + panelId);
-    if (target) target.classList.add('active');
+  /* ─ Floating labels (3D text via canvas texture) ─ */
+  function makeLabel(text){
+    const c=document.createElement('canvas');
+    c.width=256;c.height=64;
+    const cx=c.getContext('2d');
+    cx.fillStyle='rgba(0,220,130,0)';
+    cx.fillRect(0,0,256,64);
+    cx.font='bold 22px Space Mono,monospace';
+    cx.fillStyle='rgba(0,220,130,0.9)';
+    cx.fillText(text,8,40);
+    const tex=new THREE.CanvasTexture(c);
+    const mat=new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0});
+    const sprite=new THREE.Sprite(mat);
+    sprite.scale.set(2.2,.55,1);
+    return sprite;
+  }
+
+  const labelData=[
+    {text:'[1x] MOT DE PASSE',y: 2.4},
+    {text:'[2x] PENTEST',     y: .8},
+    {text:'[3x] RÉSEAU',      y:-.8},
+    {text:'[4x] PC & OSINT',  y:-2.4},
+  ];
+  const labelSprites=labelData.map(d=>{
+    const sp=makeLabel(d.text);
+    sp.position.set(3.2,d.y,0);
+    scene.add(sp);
+    return sp;
   });
-});
+
+  /* ─ Step colors for nodes ─ */
+  const stepColors=[
+    new THREE.Color('#00DC82'), // step0
+    new THREE.Color('#00DC82'), // step1
+    new THREE.Color('#00BFFF'), // step2
+    new THREE.Color('#7B61FF'), // step3
+    new THREE.Color('#FF6B6B'), // step4
+  ];
+
+  /* ─ Resize ─ */
+  const wrap=$('scroll-canvas-wrap');
+  function resize(){
+    const w=wrap.clientWidth,h=wrap.clientHeight;
+    renderer.setSize(w,h,false);
+    cam.aspect=w/h;
+    cam.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(wrap);
+  resize();
+
+  /* ─ Scroll-driven logic ─ */
+  const exp=$('scroll-exp');
+  const panels=[{el:$('sp0')},{el:$('sp1')},{el:$('sp2')},{el:$('sp3')},{el:$('sp4')}];
+  const dots=[...document.querySelectorAll('.sdot')];
+
+  let currentStep=-1;
+  let targetRotY=0, currentRotY=0;
+  let targetRotX=0, currentRotX=0;
+  let targetNodeLit=-1;
+  let glowIntensities=new Float32Array(NODE_COUNT).fill(0);
+
+  // Mouse parallax for scroll section
+  let mx=0,my=0;
+  document.addEventListener('mousemove',e=>{mx=(e.clientX/innerWidth-.5);my=(e.clientY/innerHeight-.5);},{passive:true});
+
+  function getScrollProgress(){
+    const rect=exp.getBoundingClientRect();
+    const total=exp.offsetHeight - innerHeight;
+    const scrolled= -rect.top;
+    return clamp(scrolled/total,0,1);
+  }
+
+  function setStep(step){
+    if(step===currentStep) return;
+    currentStep=step;
+    // panels
+    panels.forEach((p,i)=>{
+      const vis=i===step;
+      p.el.classList.toggle('vis',vis);
+    });
+    // dots
+    dots.forEach((d,i)=>d.classList.toggle('act',i===step));
+    // target rotation
+    const rotations=[0, Math.PI*.12, Math.PI*.38, Math.PI*.62, Math.PI*.88];
+    targetRotY=rotations[step]||0;
+    targetRotX=[0,-.08,-.04,.06,.1][step]||0;
+    targetNodeLit=step;
+  }
+
+  function updateNodes(step, progress, localT){
+    // Which segment of nodes to light for this step
+    const seg=Math.floor(NODE_COUNT/4);
+    nodes.forEach((n,i)=>{
+      const segI=Math.floor(i/seg); // 0-3
+      const isLit=(step>0 && segI===step-1)||(step===0);
+      const targetColor= isLit ? stepColors[step] : new THREE.Color('#0D3322');
+      const targetOpA= isLit ? .95 : .35;
+      const targetOpB= isLit ? .7 : .25;
+
+      n.matA.color.lerp(targetColor,.04);
+      n.matB.color.lerp(targetColor,.04);
+      n.matA.opacity+=(targetOpA-n.matA.opacity)*.06;
+      n.matB.opacity+=(targetOpB-n.matB.opacity)*.06;
+
+      // emissive glow
+      const em=new THREE.Color(0,0,0);
+      if(isLit) em.copy(targetColor).multiplyScalar(.15);
+      n.matA.emissive.lerp(em,.05);
+    });
+
+    // label sprites
+    labelSprites.forEach((sp,i)=>{
+      const target= (step>0 && i===step-1) ? .85 : (step===0 ? .4 : 0);
+      sp.material.opacity+=(target-sp.material.opacity)*.06;
+    });
+  }
+
+  let raf;
+  let lastT=0;
+  function animate(ts){
+    raf=requestAnimationFrame(animate);
+    const dt=Math.min((ts-lastT)/1000,.05);
+    lastT=ts;
+
+    const progress=getScrollProgress();
+    // 5 steps across 0..1
+    const rawStep=progress*4.99;
+    const step=clamp(Math.floor(rawStep),0,4);
+    const localT=rawStep-step; // 0..1 within step
+
+    setStep(step);
+    updateNodes(step, progress, localT);
+
+    // smooth camera rotation
+    currentRotY=lerp(currentRotY,targetRotY,.04);
+    currentRotX=lerp(currentRotX,targetRotX,.04);
+
+    const group_y=currentRotY + mx*.15;
+    const group_x=currentRotX + my*.08;
+
+    torus.rotation.z+=dt*.3;
+    torus.rotation.y=group_y;
+    ring2.rotation.y+=dt*.2;
+
+    // Helix rotates on scroll
+    scene.children.forEach(c=>{
+      if(c.type==='Mesh'||c.type==='Line'||c.type==='Points'){
+        // only rotate the helix nodes
+      }
+    });
+    // Rotate whole scene group by applying to all nodes
+    const cos=Math.cos(group_y), sin_=Math.sin(group_y);
+    const cosX=Math.cos(group_x);
+    nodes.forEach(({meshA,meshB})=>{
+      // store original in userData on first frame
+      if(!meshA.userData.ox){
+        meshA.userData.ox=meshA.position.x; meshA.userData.oz=meshA.position.z;
+        meshA.userData.oy=meshA.position.y;
+        meshB.userData.ox=meshB.position.x; meshB.userData.oz=meshB.position.z;
+        meshB.userData.oy=meshB.position.y;
+      }
+      const ax=meshA.userData.ox*cos - meshA.userData.oz*sin_;
+      const az=meshA.userData.ox*sin_ + meshA.userData.oz*cos;
+      meshA.position.x=ax; meshA.position.z=az;
+      meshA.position.y=meshA.userData.oy*cosX;
+
+      const bx=meshB.userData.ox*cos - meshB.userData.oz*sin_;
+      const bz=meshB.userData.ox*sin_ + meshB.userData.oz*cos;
+      meshB.position.x=bx; meshB.position.z=bz;
+      meshB.position.y=meshB.userData.oy*cosX;
+    });
+
+    // Camera z drift (zoom slightly per step)
+    const targetZ=9-step*.25;
+    cam.position.z=lerp(cam.position.z,targetZ,.03);
+
+    // Point light pulse
+    pL.intensity=3.5+Math.sin(ts*.001)*1.2;
+    pL.position.x=Math.cos(ts*.0004)*3;
+    pL.position.y=Math.sin(ts*.0003)*2;
+
+    renderer.render(scene,cam);
+  }
+  animate(0);
+})();
 </script>
-
 </body>
 </html>
